@@ -6,9 +6,12 @@ import { useNavigation } from '@react-navigation/native';
 
 const scaleNotes = ['C5', 'D5', 'E5', 'F5', 'G5', 'A5', 'B5', 'C6'];
 const scaleName = 'C maior';
-const keyToNote = {
-  'A': 'A5', 'B': 'B5', 'C': 'C5', 'D': 'D5', 'E': 'E5', 'F': 'F5', 'G': 'G5',
-};
+// Relaciona cada nota à tecla QWERTY em ordem
+const qwertyKeys = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I'];
+const keyToNote = {};
+qwertyKeys.forEach((key, idx) => {
+  keyToNote[key] = scaleNotes[idx];
+});
 
 const Musica1 = () => {
   const navigation = useNavigation();
@@ -20,7 +23,7 @@ const Musica1 = () => {
       const handleKeyDown = (e) => {
         const pressedKey = e.key.toUpperCase();
         const note = keyToNote[pressedKey];
-        if (note && scaleNotes.includes(note)) {
+        if (note) {
           setMessage(`Você pressionou a nota ${note} da escala!`);
           setTimeout(() => setMessage(''), 1200);
         }
@@ -40,7 +43,7 @@ const Musica1 = () => {
   const handleKeyPress = (e) => {
     const pressedKey = e.nativeEvent.key.toUpperCase();
     const note = keyToNote[pressedKey];
-    if (note && scaleNotes.includes(note)) {
+    if (note) {
       setMessage(`Você pressionou a nota ${note} da escala!`);
       setTimeout(() => setMessage(''), 1200);
     }
@@ -53,6 +56,9 @@ const Musica1 = () => {
         <Image source={require('../../../assets/icon.png')} style={{ width: 180, height: 180 }} />
         <Text style={{ marginTop: 24, fontSize: 16, fontWeight: 'bold' }}>Escala: {scaleName}</Text>
         <Text style={{ marginTop: 8, fontSize: 15 }}>Notas: {scaleNotes.join(', ')}</Text>
+        <Text style={{ marginTop: 8, fontSize: 14, color: '#888' }}>
+          Teclas: {qwertyKeys.map((k, i) => `${k} → ${scaleNotes[i]}`).join(' | ')}
+        </Text>
         {Platform.OS !== 'web' && (
           <TextInput
             ref={inputRef}
