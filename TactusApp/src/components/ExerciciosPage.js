@@ -7,8 +7,8 @@ import styles from './styles';
 import { useNavigation } from '@react-navigation/native';
 
 const exerciseSets = [
-  { label: 'Escalas Maiores', route: 'Exercicio1' },
-  { label: 'Escalas Menores', route: 'Exercicio2' },
+  { label: 'Exercícios de Escalas 1', route: 'Exercicio1' },
+  { label: 'Exercícios de Escalas 2', route: 'Exercicio2' },
   { label: 'Exercício 3', route: 'Exercicio3' },
   { label: 'Exercício 4', route: 'Exercicio4' },
   { label: 'Exercício 5', route: 'Exercicio5' },
@@ -22,7 +22,7 @@ const ExerciciosPage = () => {
     <View style={styles.pageContainer}>
       <TopBar title="Exercícios" onBack={() => navigation.goBack()} />
       <View style={styles.pageContent}>
-        <Text style={styles.pageText}>Escolha um conjunto de exercícios:</Text>
+        <Text style={styles.pageText}>Escolha um exercício:</Text>
         {exerciseSets.map(ex => (
           <ButtonPage
             key={ex.route}

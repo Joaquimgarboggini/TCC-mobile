@@ -41,6 +41,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+  cancelButton: {
+    backgroundColor: '#FF3B30',
+  },
 
   // App.js container
   appContainer: {
@@ -62,6 +70,44 @@ const styles = StyleSheet.create({
     fontSize: 22,
     color: '#333',
   },
+
+  // Scale selection styles
+  scaleList: {
+    marginVertical: 20,
+  },
+  scaleItem: {
+    padding: 10,
+    marginVertical: 5,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    backgroundColor: '#f9f9f9',
+  },
+  selectedScaleItem: {
+    backgroundColor: '#ddd',
+    borderColor: '#888',
+  },
+  scaleText: {
+    textAlign: 'center',
+    fontSize: 16,
+  },
+  selectedScaleText: {
+    marginTop: 16,
+    fontSize: 18,
+    textAlign: 'center',
+    color: '#333',
+  },
+
+  // Picker styles
+  picker: {
+    height: 50,
+    width: '100%',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    backgroundColor: '#f9f9f9',
+    marginVertical: 10,
+  },
 });
 
-export default styles
+export default styles;

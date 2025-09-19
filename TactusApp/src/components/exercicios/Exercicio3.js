@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { View, Text } from 'react-native';
 import TopBar from '../TopBar';
 import ButtonPage from '../ButtonPage';
 import ExercObject from '../ExercObject';
 import styles from '../styles';
 import { useNavigation } from '@react-navigation/native';
+import { ScaleContext } from '../../context/ScaleContext';
 
 // Notas aleatórias para o exercício (modificável)
 const defaultNotes = [
@@ -23,15 +24,39 @@ function getFingersCmajor() {
   return fingers;
 }
 
+// Função para mapear as teclas QWER YUIO para as notas da escala selecionada
+function mapKeysToNotes(scaleNotes) {
+  const keyMapping = {
+    Q: scaleNotes[0],
+    W: scaleNotes[1],
+    E: scaleNotes[2],
+    R: scaleNotes[3],
+    Y: scaleNotes[4],
+    U: scaleNotes[5],
+    I: scaleNotes[6],
+    O: scaleNotes[7],
+  };
+  return keyMapping;
+}
+
 const Exercicio3 = () => {
   const navigation = useNavigation();
+  const { selectedScale } = useContext(ScaleContext); // Obtém a escala globalmente
   const [notes, setNotes] = useState(defaultNotes);
   const [fingers, setFingers] = useState(Array(10).fill(''));
+  const [keyMapping, setKeyMapping] = useState({}); // Mapeamento de teclas para notas
 
   // Ao abrir, seta as variáveis da luva para escala de C maior
   useEffect(() => {
     setFingers(getFingersCmajor());
   }, []);
+
+  useEffect(() => {
+    if (selectedScale && majorScales[selectedScale]) {
+      const notes = majorScales[selectedScale];
+      setKeyMapping(mapKeysToNotes(notes)); // Atualiza o mapeamento de teclas
+    }
+  }, [selectedScale]);
 
   // Variáveis para cada dedo
   const [
@@ -43,6 +68,19 @@ const Exercicio3 = () => {
     <View style={styles.pageContainer}>
       <TopBar title="Exercício 3" onBack={() => navigation.goBack()} />
       <View style={styles.pageContent}>
+        <Text style={styles.selectedScaleText}>
+          Escala selecionada: {selectedScale || 'Nenhuma'}
+        </Text>
+        <View style={{ marginBottom: 16 }}>
+          <Text style={styles.pageText}>
+            As teclas QWER YUIO correspondem às notas da escala selecionada:
+          </Text>
+          {Object.entries(keyMapping).map(([key, note]) => (
+            <Text key={key} style={styles.pageText}>
+              Tecla {key}: {note}
+            </Text>
+          ))}
+        </View>
         <View style={{ marginBottom: 16 }}>
           <Text style={styles.pageText}>
             Ex 3

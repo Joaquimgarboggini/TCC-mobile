@@ -1,25 +1,13 @@
 // Exemplo de página de exercício
 // filepath: d:\l\bentao\TCC\TCC-MobDir\TCC-mob\TCC-mob\TactusApp\src\components\Exercicio1.js
-import React, { useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { View, Text } from 'react-native';
 import TopBar from '../TopBar';
 import ButtonPage from '../ButtonPage';
 import ExercObject from '../ExercObject';
 import styles from '../styles';
 import { useNavigation } from '@react-navigation/native';
-
-// Escalas maiores de C5 a B5
-const majorScales = {
-  'C': ['C5', 'D5', 'E5', 'F5', 'G5', 'A5', 'B5', 'C6'],
-  'D': ['D5', 'E5', 'F#5', 'G5', 'A5', 'B5', 'C#6', 'D6'],
-  'E': ['E5', 'F#5', 'G#5', 'A5', 'B5', 'C#6', 'D#6', 'E6'],
-  'F': ['F5', 'G5', 'A5', 'A#5', 'C6', 'D6', 'E6', 'F6'],
-  'G': ['G5', 'A5', 'B5', 'C6', 'D6', 'E6', 'F#6', 'G6'],
-  'A': ['A5', 'B5', 'C#6', 'D6', 'E6', 'F#6', 'G#6', 'A6'],
-  'B': ['B5', 'C#6', 'D#6', 'E6', 'F#6', 'G#6', 'A#6', 'B6'],
-};
-
-const scaleOptions = Object.keys(majorScales);
+import { ScaleContext } from '../../context/ScaleContext';
 
 // Função para montar os valores dos dedos (dedos 5 e 10 = polegares, ficam vazios)
 function getFingersNotes(scaleNotes) {
@@ -35,62 +23,74 @@ function getFingersNotes(scaleNotes) {
 
 const Exercicio1 = () => {
   const navigation = useNavigation();
-  const [selectedScale, setSelectedScale] = useState(null);
+  const { selectedScale, scaleNotes, keyMapping } = useContext(ScaleContext);
+  const [queue, setQueue] = useState([]); // Sistema de queue para notas
+
+  useEffect(() => {
+    if (scaleNotes && scaleNotes.length > 0) {
+      // Cria a sequência de subida da escala 2 vezes seguidas
+      const sequenciaSubida = [...scaleNotes, ...scaleNotes];
+      setQueue(sequenciaSubida);
+      
+      console.log('Exercício 1 - Escala selecionada:', selectedScale);
+      console.log('Exercício 1 - Notas da escala:', scaleNotes);
+      console.log('Exercício 1 - Sequência (2x subida):', sequenciaSubida);
+    }
+  }, [selectedScale, scaleNotes]);
 
   // Variáveis para cada dedo
   let dedo1 = '', dedo2 = '', dedo3 = '', dedo4 = '', dedo5 = '', dedo6 = '', dedo7 = '', dedo8 = '', dedo9 = '', dedo10 = '';
   let fingers = [];
 
-  if (selectedScale) {
-    fingers = getFingersNotes(majorScales[selectedScale]);
+  if (scaleNotes && scaleNotes.length > 0) {
+    fingers = getFingersNotes(scaleNotes);
     [dedo1, dedo2, dedo3, dedo4, dedo5, dedo6, dedo7, dedo8, dedo9, dedo10] = fingers;
   }
 
   return (
     <View style={styles.pageContainer}>
-      <TopBar title="Escalas Maiores" onBack={() => navigation.goBack()} />
+      <TopBar title="Exercício 1 - Subida da Escala" onBack={() => navigation.goBack()} />
       <View style={styles.pageContent}>
         <View style={{ marginBottom: 16 }}>
           <Text style={styles.pageText}>
-            As Escalas Maiores são compostas por sete notas com uma estrutura específica de tons e semitons: Tom – Tom – Semitom – Tom – Tom – Tom – Semitom (T-T-sT-T-T-T-sT)
+            Neste exercício, você deve tocar a escala de {selectedScale} subindo duas vezes seguidas.
           </Text>
         </View>
-        {!selectedScale ? (
+        
+        {queue.length > 0 ? (
           <>
-            <Text style={styles.pageText}>Escolha uma escala maior:</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginBottom: 16 }}>
-              {scaleOptions.map(scale => (
-                <ButtonPage
-                  key={scale}
-                  label={`Escala de ${scale} maior`}
-                  onPress={() => setSelectedScale(scale)}
-                />
-              ))}
+            <View style={{ marginBottom: 16 }}>
+              <Text style={[styles.pageText, { fontWeight: 'bold', fontSize: 16 }]}>
+                Escala: {selectedScale}
+              </Text>
+              <Text style={styles.pageText}>
+                Notas: {scaleNotes.join(' - ')}
+              </Text>
             </View>
+
+            <View style={{ marginBottom: 16 }}>
+              <Text style={[styles.pageText, { fontWeight: 'bold' }]}>
+                Sequência do Exercício (2x subida):
+              </Text>
+              <Text style={styles.pageText}>
+                {queue.map((note, index) => {
+                  if (index === 8) return `\n2ª vez: ${note}`;
+                  if (index === 0) return `1ª vez: ${note}`;
+                  return ` → ${note}`;
+                }).join('')}
+              </Text>
+            </View>
+            <ExercObject notes={queue} />
           </>
         ) : (
-          <>
-            <ButtonPage
-              label="Voltar"
-              onPress={() => setSelectedScale(null)}
-              style={{ backgroundColor: '#007AFF', marginBottom: 16 }}
-            />
-            <Text style={styles.pageText}>Notas da escala de {selectedScale} maior:</Text>
-            <ExercObject notes={majorScales[selectedScale]} />
-            <View style={{ marginTop: 16 }}>
-              <Text style={styles.pageText}>Notas atribuídas aos dedos da luva:</Text>
-              <Text>Dedo 1: {dedo1}</Text>
-              <Text>Dedo 2: {dedo2}</Text>
-              <Text>Dedo 3: {dedo3}</Text>
-              <Text>Dedo 4: {dedo4}</Text>
-              <Text>Dedo 5 (polegar): {dedo5}</Text>
-              <Text>Dedo 6: {dedo6}</Text>
-              <Text>Dedo 7: {dedo7}</Text>
-              <Text>Dedo 8: {dedo8}</Text>
-              <Text>Dedo 9: {dedo9}</Text>
-              <Text>Dedo 10 (polegar): {dedo10}</Text>
-            </View>
-          </>
+          <View style={{ alignItems: 'center', marginTop: 50 }}>
+            <Text style={styles.pageText}>
+              ⚠️ Nenhuma escala selecionada
+            </Text>
+            <Text style={[styles.pageText, { fontSize: 14, marginTop: 10 }]}>
+              Vá para Configurações e selecione uma escala musical para começar o exercício.
+            </Text>
+          </View>
         )}
       </View>
     </View>
