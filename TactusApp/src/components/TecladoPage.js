@@ -1,6 +1,7 @@
 import React, { useEffect, useContext, useState } from 'react';
 import { View, Text, Alert, TouchableOpacity, Platform } from 'react-native';
 import TopBar from './TopBar';
+import ESP32Controller from './ESP32Controller';
 import styles from './styles';
 import { useNavigation } from '@react-navigation/native';
 import * as ScreenOrientation from 'expo-screen-orientation';
@@ -87,6 +88,21 @@ const TecladoPage = () => {
       ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT);
     };
   }, [startSustainedNote, stopSustainedNote]);
+
+  // Handlers para ESP32
+  const handleESP32KeyPress = (key) => {
+    const note = startSustainedNote(key);
+    if (note) {
+      setSustainMessage(`🎹 ESP32: ${key} → ${note}`);
+    }
+  };
+
+  const handleESP32KeyRelease = (key) => {
+    const note = stopSustainedNote(key);
+    if (note) {
+      setTimeout(() => setSustainMessage(''), 500);
+    }
+  };
 
   // Função para simular o pressionamento de qualquer nota do piano
   const handleNotePress = (noteData) => {
@@ -186,6 +202,13 @@ const TecladoPage = () => {
     <View style={styles.pageContainer}>
       <TopBar title="Piano Completo" onBack={() => navigation.goBack()} />
       <View style={styles.pageContent}>
+        
+        {/* ESP32 Bluetooth Controller */}
+        <ESP32Controller 
+          onKeyPress={handleESP32KeyPress}
+          onKeyRelease={handleESP32KeyRelease}
+        />
+        
         <Text style={styles.pageText}>Piano Virtual - Escala: {selectedScale}</Text>
         
         <View style={{ marginBottom: 10 }}>

@@ -4,6 +4,20 @@
   <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
   <uses-permission android:name="android.permission.VIBRATE"/>
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+  
+  <!-- Permissões Bluetooth para ESP32 -->
+  <uses-permission android:name="android.permission.BLUETOOTH" />
+  <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+  <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+  <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+  
+  <!-- Bluetooth para Android 12+ -->
+  <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" />
+  <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+  
+  <uses-feature android:name="android.hardware.bluetooth" android:required="true" />
+  <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
+  
   <queries>
     <intent>
       <action android:name="android.intent.action.VIEW"/>

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useContext } from 'react';
-import { View, TouchableOpacity, Text } from 'react-native';
+import { View, TouchableOpacity, Text, Platform } from 'react-native';
 import styles from './styles';
 import { ScaleContext } from '../context/ScaleContext';
 
@@ -126,8 +126,9 @@ const ExercObject = ({ notes = [] }) => {
   const isCurrentlyPressed = isKeyPressed(expectedKey);
 
   return (
-    <View style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }}>
+    <View style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 }}>
+      {/* Nota atual do exercício */}
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginBottom: 20 }}>
         <TouchableOpacity
           key={note}
           style={[
@@ -136,7 +137,7 @@ const ExercObject = ({ notes = [] }) => {
               backgroundColor: isHoldingCorrectNote && isCurrentlyPressed ? '#FF5722' : 
                                activeNote === note ? '#34C759' : '#007AFF',
               margin: 4,
-              minWidth: 80,
+              minWidth: 100,
               transform: [{ scale: isHoldingCorrectNote && isCurrentlyPressed ? 1.1 : 1.0 }],
               shadowColor: isHoldingCorrectNote && isCurrentlyPressed ? '#FF5722' : '#000',
               shadowOpacity: isHoldingCorrectNote && isCurrentlyPressed ? 0.8 : 0.3,
@@ -171,6 +172,97 @@ const ExercObject = ({ notes = [] }) => {
           </Text>
         </TouchableOpacity>
       </View>
+
+      {/* Teclado Virtual para Mobile */}
+      {Platform.OS !== 'web' && (
+        <View style={{ marginBottom: 20 }}>
+          <Text style={{ fontSize: 14, fontWeight: 'bold', textAlign: 'center', marginBottom: 10 }}>
+            🎹 Teclado Virtual - Toque e Segure
+          </Text>
+          <View style={{ 
+            flexDirection: 'row', 
+            flexWrap: 'wrap', 
+            justifyContent: 'center',
+            paddingHorizontal: 10
+          }}>
+            {['Q', 'W', 'E', 'R', 'Y', 'U', 'I', 'O'].map((key) => {
+              const keyNote = keyMapping[key];
+              const isPressed = isKeyPressed(key);
+              const isCorrectKey = key === expectedKey;
+              return (
+                <TouchableOpacity
+                  key={key}
+                  style={{
+                    backgroundColor: isPressed ? '#FF5722' : 
+                                   isCorrectKey ? '#34C759' : '#007AFF',
+                    paddingVertical: 12,
+                    paddingHorizontal: 14,
+                    margin: 3,
+                    borderRadius: 8,
+                    minWidth: 45,
+                    alignItems: 'center',
+                    elevation: isPressed ? 6 : 3,
+                    shadowColor: isPressed ? '#FF5722' : '#000',
+                    shadowOpacity: isPressed ? 0.8 : 0.3,
+                    shadowRadius: isPressed ? 6 : 3,
+                    transform: [{ scale: isPressed ? 1.1 : 1.0 }],
+                    borderWidth: isCorrectKey ? 2 : 0,
+                    borderColor: isCorrectKey ? '#FFD700' : 'transparent'
+                  }}
+                  onPressIn={() => {
+                    if (finished) return;
+                    startSustainedNote(key);
+                    
+                    if (key === expectedKey) {
+                      setIsHoldingCorrectNote(true);
+                    }
+                  }}
+                  onPressOut={() => {
+                    if (finished) return;
+                    stopSustainedNote(key);
+                    
+                    if (key === expectedKey && isHoldingCorrectNote) {
+                      // Sucesso - avança para próxima nota
+                      setActiveNote(note);
+                      setScore(prev => prev + 5 + (streak + 1));
+                      setStreak(prev => prev + 1);
+                      setLastMessage("✅ Acertou! +" + (5 + (streak + 1)) + " pontos");
+                      setIsHoldingCorrectNote(false);
+                      
+                      setTimeout(() => {
+                        setActiveNote(null);
+                        setLastMessage("");
+                        if (currentIndex < queue.length - 1) {
+                          setCurrentIndex(currentIndex + 1);
+                        } else {
+                          setFinished(true);
+                        }
+                      }, 800);
+                    }
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 11 }}>
+                    {key}
+                  </Text>
+                  <Text style={{ color: 'white', fontSize: 9 }}>
+                    {keyNote || '?'}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+          <Text style={{ 
+            fontSize: 11, 
+            color: '#666', 
+            textAlign: 'center', 
+            marginTop: 8,
+            paddingHorizontal: 20
+          }}>
+            Tecla destacada em verde: {expectedKey} → {note}
+          </Text>
+        </View>
+      )}
       
       <View style={{ marginTop: 16, alignItems: 'center' }}>
         <Text style={{ fontSize: 18, fontWeight: 'bold' }}>
