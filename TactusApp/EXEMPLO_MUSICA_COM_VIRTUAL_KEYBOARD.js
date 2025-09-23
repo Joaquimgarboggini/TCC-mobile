@@ -1,13 +1,18 @@
+// Exemplo de como usar o VirtualKeyboard em outras páginas de música
+// Aplicar este padrão em Musica2.js, Musica3.js, Musica4.js, Musica5.js
+
 import React, { useState, useRef, useEffect, useContext } from 'react';
-import { View, Image, Text, TouchableOpacity, TextInput, Platform } from 'react-native';
+import { View, Image, Text, TouchableOpacity, TextInput, Platform, ScrollView } from 'react-native';
 import TopBar from '../TopBar';
 import styles from '../styles';
 import { useNavigation } from '@react-navigation/native';
 import { ScaleContext } from '../../context/ScaleContext';
+import VirtualKeyboard from '../VirtualKeyboard';
 
-const MUSICA_SCALE = 'D Maior';
+// Escala específica desta música
+const MUSICA_SCALE = 'C Maior'; // Alterar conforme a música
 
-const Musica2 = () => {
+const MusicaX = () => {
   const navigation = useNavigation();
   const { 
     selectedScale, 
@@ -27,17 +32,16 @@ const Musica2 = () => {
   // Define escala temporária ao entrar na música
   useEffect(() => {
     setTemporaryScaleForMusic(MUSICA_SCALE);
-    
-    // Cleanup: restaura escala anterior ao sair
     return () => {
       restorePreviousScale();
     };
   }, [setTemporaryScaleForMusic, restorePreviousScale]);
 
+  // Configuração de listeners de teclado para web
   useEffect(() => {
     if (Platform.OS === 'web') {
       const handleKeyDown = (e) => {
-        if (e.repeat) return; // Ignora repetições automáticas
+        if (e.repeat) return;
         const note = startSustainedNote(e.key);
         if (note) {
           setMessage(`🎵 Sustentando: ${e.key.toUpperCase()} → ${note}`);
@@ -92,19 +96,67 @@ const Musica2 = () => {
 
   return (
     <View style={styles.pageContainer}>
-      <TopBar title="Música 2" onBack={() => navigation.goBack()} />
-      <View style={styles.pageContent}>
-        <Image source={require('../../../assets/icon.png')} style={{ width: 180, height: 180 }} />
-        <Text style={{ marginTop: 24, fontSize: 16, fontWeight: 'bold' }}>Escala: {MUSICA_SCALE}</Text>
-        <Text style={{ marginTop: 8, fontSize: 15 }}>Notas: {scaleNotes.join(', ')}</Text>
-
+      <TopBar title="Música X" onBack={() => navigation.goBack()} />
+      <ScrollView contentContainerStyle={[styles.pageContent, { flexGrow: 1, paddingBottom: 20 }]}>
+        <Image source={require('../../../assets/icon.png')} style={{ width: 160, height: 160 }} />
+        <Text style={{ marginTop: 20, fontSize: 16, fontWeight: 'bold' }}>Escala: {MUSICA_SCALE}</Text>
+        <Text style={{ marginTop: 8, fontSize: 14 }}>Notas: {scaleNotes.join(', ')}</Text>
         
-        {message !== '' && (
-          <Text style={{ marginTop: 16, color: '#34C759', fontSize: 16 }}>{message}</Text>
+        {/* Teclado Virtual para Mobile */}
+        {Platform.OS !== 'web' && (
+          <VirtualKeyboard
+            onKeyPress={(key) => {
+              const note = startSustainedNote(key);
+              if (note) {
+                setMessage(`🎵 Sustentando: ${key} → ${note}`);
+              }
+            }}
+            onKeyRelease={(key) => {
+              const note = stopSustainedNote(key);
+              if (note) {
+                setMessage(`🎵 Parou: ${key} → ${note}`);
+                setTimeout(() => setMessage(''), 1000);
+              }
+            }}
+            showLabels={true}
+            compact={false}
+          />
         )}
-      </View>
+        
+        {/* Input invisível para web */}
+        {Platform.OS !== 'web' && (
+          <TextInput
+            ref={inputRef}
+            style={{ height: 0, width: 0, opacity: 0 }}
+            autoFocus
+            onKeyPress={handleKeyPress}
+            blurOnSubmit={false}
+          />
+        )}
+        
+        {/* Mensagem de feedback */}
+        {message !== '' && (
+          <Text style={{ marginTop: 16, color: '#34C759', fontSize: 16, textAlign: 'center' }}>
+            {message}
+          </Text>
+        )}
+        
+        {/* Instruções */}
+        <Text style={{ 
+          marginTop: 16, 
+          fontSize: 12, 
+          color: '#666', 
+          textAlign: 'center',
+          paddingHorizontal: 20
+        }}>
+          {Platform.OS === 'web' 
+            ? 'Use as teclas QWER YUIO para tocar as notas'
+            : 'Toque nas teclas do piano virtual para tocar as notas'
+          }
+        </Text>
+      </ScrollView>
     </View>
   );
 };
 
-export default Musica2;
+export default MusicaX;

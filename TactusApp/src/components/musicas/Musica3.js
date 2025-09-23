@@ -52,13 +52,16 @@ const Musica3 = () => {
         }
       };
 
-      window.addEventListener('keydown', handleKeyDown);
-      window.addEventListener('keyup', handleKeyUp);
-      
-      return () => {
-        window.removeEventListener('keydown', handleKeyDown);
-        window.removeEventListener('keyup', handleKeyUp);
-      };
+      // Verificar se está em ambiente web antes de usar window
+      if (typeof window !== 'undefined') {
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('keyup', handleKeyUp);
+        
+        return () => {
+          window.removeEventListener('keydown', handleKeyDown);
+          window.removeEventListener('keyup', handleKeyUp);
+        };
+      }
     }
   }, [startSustainedNote, stopSustainedNote]);
 
@@ -95,15 +98,7 @@ const Musica3 = () => {
         <Text style={{ marginTop: 24, fontSize: 16, fontWeight: 'bold' }}>Escala: {MUSICA_SCALE}</Text>
         <Text style={{ marginTop: 8, fontSize: 15 }}>Notas: {scaleNotes.join(', ')}</Text>
 
-        {Platform.OS !== 'web' && (
-          <TextInput
-            ref={inputRef}
-            style={{ height: 0, width: 0, opacity: 0 }}
-            autoFocus
-            onKeyPress={handleKeyPress}
-            blurOnSubmit={false}
-          />
-        )}
+        
 
         {message !== '' && (
           <Text style={{ marginTop: 16, color: '#34C759', fontSize: 16 }}>{message}</Text>

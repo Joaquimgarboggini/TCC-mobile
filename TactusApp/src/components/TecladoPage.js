@@ -1,7 +1,8 @@
 import React, { useEffect, useContext, useState } from 'react';
-import { View, Text, Alert, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, Alert, TouchableOpacity, Platform, ScrollView } from 'react-native';
 import TopBar from './TopBar';
 import ESP32Controller from './ESP32Controller';
+import VirtualKeyboard from './VirtualKeyboard';
 import styles from './styles';
 import { useNavigation } from '@react-navigation/native';
 import * as ScreenOrientation from 'expo-screen-orientation';
@@ -74,14 +75,17 @@ const TecladoPage = () => {
         }
       };
 
-      window.addEventListener('keydown', handleKeyDown);
-      window.addEventListener('keyup', handleKeyUp);
+      // Verificar se está em ambiente web antes de usar window
+      if (typeof window !== 'undefined') {
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('keyup', handleKeyUp);
 
-      return () => {
-        window.removeEventListener('keydown', handleKeyDown);
-        window.removeEventListener('keyup', handleKeyUp);
-        ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT);
-      };
+        return () => {
+          window.removeEventListener('keydown', handleKeyDown);
+          window.removeEventListener('keyup', handleKeyUp);
+          ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT);
+        };
+      }
     }
 
     return () => {
@@ -201,13 +205,18 @@ const TecladoPage = () => {
   return (
     <View style={styles.pageContainer}>
       <TopBar title="Piano Completo" onBack={() => navigation.goBack()} />
-      <View style={styles.pageContent}>
+      <ScrollView contentContainerStyle={[
+        styles.pageContent, 
+        { 
+          flexGrow: 1, 
+          paddingBottom: 20,
+          alignItems: 'center',
+          justifyContent: 'flex-start'
+        }
+      ]}>
         
         {/* ESP32 Bluetooth Controller */}
-        <ESP32Controller 
-          onKeyPress={handleESP32KeyPress}
-          onKeyRelease={handleESP32KeyRelease}
-        />
+        
         
         <Text style={styles.pageText}>Piano Virtual - Escala: {selectedScale}</Text>
         
@@ -217,55 +226,26 @@ const TecladoPage = () => {
           </Text>
         </View>
         
-        {/* Mensagem de sustain */}
+        {/* Teclado Virtual Principal */}
+        <VirtualKeyboard
+          onKeyPress={(key) => {
+            const note = startSustainedNote(key);
+            if (note) {
+              setSustainMessage(`🎹 Sustentando: ${key} → ${note}`);
+            }
+          }}
+          onKeyRelease={(key) => {
+            const note = stopSustainedNote(key);
+            if (note) {
+              setSustainMessage(`🎹 Parou: ${key} → ${note}`);
+              setTimeout(() => setSustainMessage(''), 1000);
+            }
+          }}
+          showLabels={true}
+          compact={false}
+        />
         
-        {/* Legenda */}
-        <View style={{ 
-          flexDirection: 'row', 
-          justifyContent: 'center', 
-          marginBottom: 15,
-          flexWrap: 'wrap'
-        }}>
-          
-        </View>
-        
-        {/* Piano layout - Oitavas 5 e 6 lado a lado */}
-        <View style={{ 
-          flexDirection: 'column', 
-          alignItems: 'center',
-          backgroundColor: '#F5F5F5',
-          padding: 15,
-          borderRadius: 8,
-          marginHorizontal: 10
-        }}>
-          
-          {/* Título do Piano */}
-          
-          {/* Layout do piano como piano real */}
-          <View style={{ 
-            flexDirection: 'row', 
-            justifyContent: 'center',
-            alignItems: 'flex-start',
-            backgroundColor: '#000',
-            padding: 8,
-            borderRadius: 6,
-            flexWrap: 'wrap'
-          }}>
-            {PIANO_LAYOUT.map((noteData, index) => renderPianoKey(noteData, index))}
-          </View>
-          
-          {/* Indicador das oitavas */}
-          <View style={{ 
-            flexDirection: 'row', 
-            justifyContent: 'space-around', 
-            width: '100%',
-            marginTop: 8
-          }}>
-          </View>
-        </View>
-        
-        {/* Informações adicionais */}
-      </View>
+      </ScrollView>
     </View>
   );
 };

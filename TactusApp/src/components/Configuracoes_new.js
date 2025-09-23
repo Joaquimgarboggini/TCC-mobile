@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { View, Text, Picker, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import TopBar from './TopBar';
 import styles from './styles';
 import { useNavigation } from '@react-navigation/native';
@@ -8,7 +8,10 @@ import { ScaleContext } from '../context/ScaleContext';
 const Configuracoes = () => {
   const navigation = useNavigation();
   const { selectedScale, setSelectedScale, availableScales } = useContext(ScaleContext);
-  const [localScale, setLocalScale] = useState(selectedScale);
+  const [localScale, setLocalScale] = useState(selectedScale || 'C Maior');
+
+  // Verificação de segurança para availableScales
+  const safeAvailableScales = availableScales || ['C Maior', 'D Maior', 'E Maior', 'F Maior', 'G Maior', 'A Maior', 'B Maior'];
 
   const handleScaleSelection = (scale) => {
     setLocalScale(scale);

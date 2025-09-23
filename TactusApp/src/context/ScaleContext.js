@@ -2,8 +2,8 @@ import React, { createContext, useState, useEffect } from 'react';
 
 export const ScaleContext = createContext();
 
-// Teclas QWER YUIO
-export const qwertyKeys = ['Q', 'W', 'E', 'R', 'Y', 'U', 'I', 'O'];
+// Teclas QWER YUIO expandidas para C5-B6
+export const qwertyKeys = ['Q', 'W', 'E', 'R', 'Y', 'U', 'I', 'O', 'P', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Z', 'X', 'C', 'V', 'B', 'N'];
 
 // Definição completa das escalas maiores e menores
 export const scales = {
