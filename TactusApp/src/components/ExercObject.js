@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useContext } from 'react';
-import { View, TouchableOpacity, Text, Platform, ScrollView } from 'react-native';
+import { View, TouchableOpacity, Text, Platform } from 'react-native';
 import styles from './styles';
 import { ScaleContext } from '../context/ScaleContext';
 import VirtualKeyboard from './VirtualKeyboard';
@@ -121,7 +121,7 @@ const ExercObject = ({ notes = [] }) => {
 
   if (finished || currentIndex >= queue.length) {
     return (
-      <View style={{ alignItems: 'center', margin: 16 }}>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', margin: 16 }}>
         <Text style={styles.pageText}>Exercicio Concluido!</Text>
         <Text style={styles.pageText}>Pontuação final: {score}</Text>
       </View>
@@ -133,15 +133,15 @@ const ExercObject = ({ notes = [] }) => {
   const isCurrentlyPressed = isKeyPressed(expectedKey);
 
   return (
-    <ScrollView contentContainerStyle={{ 
-      flexGrow: 1, 
+    <View style={{ 
+      flex: 1, 
       justifyContent: 'center', 
       alignItems: 'center',
-      paddingHorizontal: 16, 
-      paddingVertical: 20 
+      width: '100%',
+      paddingHorizontal: 16
     }}>
       {/* Nota atual do exercício */}
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginBottom: 20 }}>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginBottom: 15 }}>
         <TouchableOpacity
           key={note}
           style={[
@@ -188,61 +188,63 @@ const ExercObject = ({ notes = [] }) => {
 
       {/* Teclado Virtual para Mobile */}
       {Platform.OS !== 'web' && (
-        <VirtualKeyboard
-          onKeyPress={(key) => {
-            if (finished) return;
-            startSustainedNote(key);
-            
-            if (key === expectedKey) {
-              setIsHoldingCorrectNote(true);
-            }
-          }}
-          onKeyRelease={(key) => {
-            if (finished) return;
-            stopSustainedNote(key);
-            
-            if (key === expectedKey && isHoldingCorrectNote) {
-              // Sucesso - avança para próxima nota
-              setActiveNote(note);
-              setScore(prev => prev + 5 + (streak + 1));
-              setStreak(prev => prev + 1);
-              setLastMessage("✅ Acertou! +" + (5 + (streak + 1)) + " pontos");
-              setIsHoldingCorrectNote(false);
+        <View style={{ marginTop: 10 }}>
+          <VirtualKeyboard
+            onKeyPress={(key) => {
+              if (finished) return;
+              startSustainedNote(key);
               
-              setTimeout(() => {
-                setActiveNote(null);
-                setLastMessage("");
-                if (currentIndex < queue.length - 1) {
-                  setCurrentIndex(currentIndex + 1);
-                } else {
-                  setFinished(true);
-                }
-              }, 800);
-            }
-          }}
-          showLabels={true}
-          compact={true}
-        />
+              if (key === expectedKey) {
+                setIsHoldingCorrectNote(true);
+              }
+            }}
+            onKeyRelease={(key) => {
+              if (finished) return;
+              stopSustainedNote(key);
+              
+              if (key === expectedKey && isHoldingCorrectNote) {
+                // Sucesso - avança para próxima nota
+                setActiveNote(note);
+                setScore(prev => prev + 5 + (streak + 1));
+                setStreak(prev => prev + 1);
+                setLastMessage("✅ Acertou! +" + (5 + (streak + 1)) + " pontos");
+                setIsHoldingCorrectNote(false);
+                
+                setTimeout(() => {
+                  setActiveNote(null);
+                  setLastMessage("");
+                  if (currentIndex < queue.length - 1) {
+                    setCurrentIndex(currentIndex + 1);
+                  } else {
+                    setFinished(true);
+                  }
+                }, 800);
+              }
+            }}
+            showLabels={true}
+            compact={true}
+          />
+        </View>
       )}
       
-      <View style={{ marginTop: 16, alignItems: 'center' }}>
+      <View style={{ marginTop: 12, alignItems: 'center' }}>
         <Text style={{ fontSize: 18, fontWeight: 'bold' }}>
           Pontuação: {score} | Sequência: {streak}
         </Text>
         <Text style={{ 
           fontSize: 14, 
-          marginTop: 8, 
+          marginTop: 6, 
           textAlign: 'center',
           color: lastMessage.includes('Errou') ? '#FF0000' : 
                  lastMessage.includes('Acertou') ? '#34C759' : '#000'
         }}>
           {lastMessage}
         </Text>
-        <Text style={{ fontSize: 12, marginTop: 8, color: '#666', textAlign: 'center' }}>
+        <Text style={{ fontSize: 12, marginTop: 6, color: '#666', textAlign: 'center' }}>
           Progresso: {currentIndex + 1} / {queue.length}
         </Text>
       </View>
-    </ScrollView>
+    </View>
   );
 };
 

@@ -21,8 +21,8 @@ const ExerciciosPage = () => {
   return (
     <View style={styles.pageContainer}>
       <TopBar title="Exercícios" onBack={() => navigation.goBack()} />
-      <View style={styles.pageContent}>
-        <Text style={styles.pageText}>Escolha um exercício:</Text>
+      <View style={{ flex: 1, alignItems: 'center', paddingHorizontal: 20, paddingTop: 40 }}>
+        <Text style={[styles.pageText, { marginBottom: 20 }]}>Escolha um exercício:</Text>
         {exerciseSets.map(ex => (
           <ButtonPage
             key={ex.route}

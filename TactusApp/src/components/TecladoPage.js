@@ -206,12 +206,13 @@ const TecladoPage = () => {
     <View style={styles.pageContainer}>
       <TopBar title="Piano Completo" onBack={() => navigation.goBack()} />
       <ScrollView contentContainerStyle={[
-        styles.pageContent, 
         { 
           flexGrow: 1, 
           paddingBottom: 20,
           alignItems: 'center',
-          justifyContent: 'flex-start'
+          justifyContent: 'flex-start',
+          paddingHorizontal: 20,
+          paddingTop: 40
         }
       ]}>
         

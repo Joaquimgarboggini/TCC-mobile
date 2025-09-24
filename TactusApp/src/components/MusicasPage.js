@@ -19,8 +19,8 @@ const MusicasPage = () => {
   return (
     <View style={styles.pageContainer}>
       <TopBar title="Músicas" onBack={() => navigation.goBack()} />
-      <View style={styles.pageContent}>
-        <Text style={styles.pageText}>Escolha uma música:</Text>
+      <View style={{ flex: 1, alignItems: 'center', paddingHorizontal: 20, paddingTop: 40 }}>
+        <Text style={[styles.pageText, { marginBottom: 20 }]}>Escolha uma música:</Text>
         {musicSets.map(music => (
           <ButtonPage
             key={music.route}

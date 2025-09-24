@@ -50,8 +50,8 @@ const Exercicio1 = () => {
   return (
     <View style={styles.pageContainer}>
       <TopBar title="Exercício 1 - Subida da Escala" onBack={() => navigation.goBack()} />
-      <View style={styles.pageContent}>
-        <View style={{ marginBottom: 16 }}>
+      <View style={[styles.pageContent, { justifyContent: 'flex-start' }]}>
+        <View style={{ marginBottom: 16, marginTop: 52, marginHorizontal: 28 }}>
           <Text style={styles.pageText}>
             Neste exercício, você deve tocar a escala de {selectedScale} subindo duas vezes seguidas.
           </Text>
@@ -68,19 +68,15 @@ const Exercicio1 = () => {
               </Text>
             </View>
 
-            <View style={{ marginBottom: 16 }}>
-              <Text style={[styles.pageText, { fontWeight: 'bold' }]}>
-                Sequência do Exercício (2x subida):
-              </Text>
-              <Text style={styles.pageText}>
-                {queue.map((note, index) => {
-                  if (index === 8) return `\n2ª vez: ${note}`;
-                  if (index === 0) return `1ª vez: ${note}`;
-                  return ` → ${note}`;
-                }).join('')}
-              </Text>
+            <View style={{ 
+              flex: 1, 
+              width: '100%', 
+              alignItems: 'center', 
+              justifyContent: 'flex-start',
+              paddingTop: 20
+            }}>
+              <ExercObject notes={queue} />
             </View>
-            <ExercObject notes={queue} />
           </>
         ) : (
           <View style={{ alignItems: 'center', marginTop: 50 }}>

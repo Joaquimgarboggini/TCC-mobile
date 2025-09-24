@@ -19,23 +19,27 @@ const App = () => {
   return (
     <View style={styles.appContainer}>
       <TopBar title="Home" />
-      <ButtonPage
-        label="Exercícios"
-        onPress={() => navigation.navigate('Exercicios')}
-      />
-      <ButtonPage label="Músicas" onPress={() => navigation.navigate('Musicas')} />
-      <ButtonPage label="Teclado" onPress={() => navigation.navigate('Teclado')} />
-      <ButtonPage
-        label="Configurações"
-        onPress={() => navigation.navigate('Configuracoes')}
-      />
-      <ButtonPage
-        label="Ajuda"
-        onPress={() => navigation.navigate('Ajuda')}
-      />
-      <Text style={styles.selectedScaleText}>
-        Escala selecionada: {selectedScale || 'Nenhuma'}
-      </Text>
+      <View style={{ flex: 1, alignItems: 'center', paddingHorizontal: 20, paddingTop: 60 }}>
+        <ButtonPage
+          label="Exercícios"
+          onPress={() => navigation.navigate('Exercicios')}
+        />
+        <ButtonPage label="Músicas" onPress={() => navigation.navigate('Musicas')} />
+        <ButtonPage label="Teclado" onPress={() => navigation.navigate('Teclado')} />
+        <ButtonPage
+          label="Configurações"
+          onPress={() => navigation.navigate('Configuracoes')}
+        />
+        <ButtonPage
+          label="Ajuda"
+          onPress={() => navigation.navigate('Ajuda')}
+        />
+        <View style={{ flex: 1, justifyContent: 'flex-end', paddingBottom: 100 }}>
+          <Text style={styles.selectedScaleText}>
+            Escala selecionada: {selectedScale || 'Nenhuma'}
+          </Text>
+        </View>
+      </View>
     </View>
   );
 };

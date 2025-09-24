@@ -48,7 +48,7 @@ const Exercicio2 = () => {
   return (
     <View style={styles.pageContainer}>
       <TopBar title="Exercício 2 - Descida da Escala" onBack={() => navigation.goBack()} />
-      <View style={styles.pageContent}>
+      <View style={[styles.pageContent, { justifyContent: 'flex-start' }]}>
         <View style={{ marginBottom: 16 }}>
           <Text style={styles.pageText}>
             Neste exercício, você deve tocar a escala de {selectedScale} descendo duas vezes seguidas.
@@ -78,7 +78,15 @@ const Exercicio2 = () => {
                 }).join('')}
               </Text>
             </View>
-            <ExercObject notes={queue} />
+            <View style={{ 
+              flex: 1, 
+              width: '100%', 
+              alignItems: 'center', 
+              justifyContent: 'flex-start',
+              paddingTop: 20
+            }}>
+              <ExercObject notes={queue} />
+            </View>
           </>
         ) : (
           <View style={{ alignItems: 'center', marginTop: 50 }}>

@@ -42,7 +42,7 @@ const Configuracoes = () => {
     return (
       <View style={styles.pageContainer}>
         <TopBar title="Configurações" onBack={() => navigation.goBack()} />
-        <View style={styles.pageContent}>
+        <View style={{ flex: 1, alignItems: 'center', paddingHorizontal: 20, paddingTop: 40 }}>
           <Text style={styles.pageText}>Carregando configurações...</Text>
         </View>
       </View>
@@ -52,7 +52,12 @@ const Configuracoes = () => {
   return (
     <View style={styles.pageContainer}>
       <TopBar title="Configurações" onBack={handleBack} />
-      <ScrollView contentContainerStyle={[styles.pageContent, { flexGrow: 1 }]}>
+      <ScrollView contentContainerStyle={[{ 
+        flexGrow: 1, 
+        alignItems: 'center', 
+        paddingHorizontal: 20, 
+        paddingTop: 40 
+      }]}>
         <Text style={[styles.pageText, { fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 30 }]}>
           Configuração da Escala Musical
         </Text>
@@ -123,12 +128,38 @@ const Configuracoes = () => {
           Escala selecionada: <Text style={{ fontWeight: 'bold', color: '#007AFF' }}>{localScale}</Text>
         </Text>
         
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={[styles.button, styles.confirmButton]} onPress={handleConclude}>
-            <Text style={[styles.buttonText, { fontSize: 18, fontWeight: 'bold' }]}>✓ Concluir</Text>
+        <View style={{ alignItems: 'center', marginTop: 20 }}>
+          <TouchableOpacity 
+            style={[
+              styles.button, 
+              styles.confirmButton,
+              { 
+                minWidth: 150, 
+                width: '60%', 
+                maxWidth: 200, 
+                paddingVertical: 10,
+                marginVertical: 4
+              }
+            ]} 
+            onPress={handleConclude}
+          >
+            <Text style={[styles.buttonText, { fontSize: 16, fontWeight: 'bold' }]}>✓ Concluir</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={handleCancel}>
-            <Text style={styles.buttonText}>✕ Cancelar</Text>
+          <TouchableOpacity 
+            style={[
+              styles.button, 
+              styles.cancelButton,
+              { 
+                minWidth: 150, 
+                width: '60%', 
+                maxWidth: 200, 
+                paddingVertical: 10,
+                marginVertical: 4
+              }
+            ]} 
+            onPress={handleCancel}
+          >
+            <Text style={[styles.buttonText, { fontSize: 16 }]}>✕ Cancelar</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

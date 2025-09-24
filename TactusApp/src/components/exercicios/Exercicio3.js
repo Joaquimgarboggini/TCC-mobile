@@ -67,7 +67,7 @@ const Exercicio3 = () => {
   return (
     <View style={styles.pageContainer}>
       <TopBar title="Exercício 3" onBack={() => navigation.goBack()} />
-      <View style={styles.pageContent}>
+      <View style={[styles.pageContent, { justifyContent: 'flex-start' }]}>
         <Text style={styles.selectedScaleText}>
           Escala selecionada: {selectedScale || 'Nenhuma'}
         </Text>
@@ -86,7 +86,15 @@ const Exercicio3 = () => {
             Ex 3
           </Text>
         </View>
-        <ExercObject notes={notes} />
+        <View style={{ 
+          flex: 1, 
+          width: '100%', 
+          alignItems: 'center', 
+          justifyContent: 'flex-start',
+          paddingTop: 20
+        }}>
+          <ExercObject notes={notes} />
+        </View>
         <View style={{ marginTop: 16 }}>
           <Text style={styles.pageText}>Notas atribuídas aos dedos da luva (C maior):</Text>
           <Text>Dedo 1: {dedo1}</Text>

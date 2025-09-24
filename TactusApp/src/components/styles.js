@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 const styles = StyleSheet.create({
   // TopBar styles
   topBarContainer: {
-    height: 56,
+    height: 80,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'black',
@@ -13,9 +13,14 @@ const styles = StyleSheet.create({
   },
   topBarBackButton: {
     paddingRight: 16,
+    minWidth: 60,
+    alignItems: 'flex-start',
+    paddingVertical: 12,
   },
   topBarTitle: {
-    flex: 1,
+    position: 'absolute',
+    left: 0,
+    right: 0,
     fontSize: 20,
     fontWeight: 'bold',
     textAlign: 'center',
@@ -35,6 +40,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginVertical: 8,
     alignItems: 'center',
+    minWidth: 200,
+    width: '80%',
+    maxWidth: 300,
   },
   buttonText: {
     color: '#fff',

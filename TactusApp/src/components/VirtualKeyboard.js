@@ -46,8 +46,8 @@ const VirtualKeyboard = ({
   const whiteKeysCount = keyboardKeys.filter(k => k.type === 'white').length;
   const availableWidth = Math.min(screenWidth * 0.9, 380); // Largura máxima
   const keyWidth = availableWidth / whiteKeysCount;
-  const whiteKeyHeight = compact ? 80 : 120;
-  const blackKeyHeight = compact ? 50 : 75;
+  const whiteKeyHeight = compact ? 60 : 120; // Reduzido de 80 para 60
+  const blackKeyHeight = compact ? 35 : 75;  // Reduzido de 50 para 35
   const pianoWidth = whiteKeysCount * keyWidth;
 
   const handleKeyPress = (key) => {
@@ -86,17 +86,19 @@ const VirtualKeyboard = ({
             <View style={styles.keyContent}>
               {showLabels && (
                 <>
-                  <Text style={[styles.keyLabel, isPressed && styles.pressedKeyLabel]}>
+                  <Text style={[styles.keyLabel, isPressed && styles.pressedKeyLabel, compact && { fontSize: 10 }]}>
                     {keyData.key}
                   </Text>
                   {keyData.note && (
-                    <Text style={[styles.noteLabel, isPressed && styles.pressedNoteLabel]}>
+                    <Text style={[styles.noteLabel, isPressed && styles.pressedNoteLabel, compact && { fontSize: 8 }]}>
                       {keyData.note}
                     </Text>
                   )}
-                  <Text style={styles.octaveLabel}>
-                    Oitava {keyData.octave}
-                  </Text>
+                  {!compact && (
+                    <Text style={styles.octaveLabel}>
+                      Oitava {keyData.octave}
+                    </Text>
+                  )}
                 </>
               )}
             </View>
@@ -148,11 +150,11 @@ const VirtualKeyboard = ({
           <View style={styles.keyContent}>
             {showLabels && (
               <>
-                <Text style={[styles.blackKeyLabel, isPressed && styles.pressedBlackKeyLabel]}>
+                <Text style={[styles.blackKeyLabel, isPressed && styles.pressedBlackKeyLabel, compact && { fontSize: 8 }]}>
                   {keyData.key}
                 </Text>
                 {keyData.note && (
-                  <Text style={[styles.blackNoteLabel, isPressed && styles.pressedBlackNoteLabel]}>
+                  <Text style={[styles.blackNoteLabel, isPressed && styles.pressedBlackNoteLabel, compact && { fontSize: 7 }]}>
                     {keyData.note}
                   </Text>
                 )}
@@ -165,10 +167,10 @@ const VirtualKeyboard = ({
   };
 
   return (
-    <View style={styles.keyboardContainer}>
+    <View style={[styles.keyboardContainer, compact && { padding: 8, margin: 5 }]}>
       
       <View style={[styles.pianoContainer, { 
-        height: whiteKeyHeight + 20, 
+        height: whiteKeyHeight + (compact ? 10 : 20), 
         width: pianoWidth,
         alignSelf: 'center' 
       }]}>
