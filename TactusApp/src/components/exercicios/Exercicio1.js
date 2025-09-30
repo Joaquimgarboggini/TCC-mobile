@@ -2,7 +2,7 @@
 // filepath: d:\l\bentao\TCC\TCC-MobDir\TCC-mob\TCC-mob\TactusApp\src\components\Exercicio1.js
 import React, { useContext, useEffect, useState } from 'react';
 import { View, Text } from 'react-native';
-import TopBar from '../TopBar';
+import HeaderMinimal from '../HeaderMinimal';
 import ButtonPage from '../ButtonPage';
 import ExercObject from '../ExercObject';
 import styles from '../styles';
@@ -49,9 +49,9 @@ const Exercicio1 = () => {
 
   return (
     <View style={styles.pageContainer}>
-      <TopBar title="Exercício 1 - Subida da Escala" onBack={() => navigation.goBack()} />
+      <HeaderMinimal title="Exercício 1" iconType="exercicios" onBack={() => navigation.goBack()} />
       <View style={[styles.pageContent, { justifyContent: 'flex-start' }]}>
-        <View style={{ marginBottom: 16, marginTop: 52, marginHorizontal: 28 }}>
+        <View style={{ marginBottom: 16, marginTop: 20, marginHorizontal: 28 }}>
           <Text style={styles.pageText}>
             Neste exercício, você deve tocar a escala de {selectedScale} subindo duas vezes seguidas.
           </Text>

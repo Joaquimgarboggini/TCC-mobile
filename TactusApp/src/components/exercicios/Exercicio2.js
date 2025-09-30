@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { View, Text } from 'react-native';
-import TopBar from '../TopBar';
+import HeaderMinimal from '../HeaderMinimal';
 import ExercObject from '../ExercObject';
 import styles from '../styles';
 import { useNavigation } from '@react-navigation/native';
@@ -47,7 +47,7 @@ const Exercicio2 = () => {
 
   return (
     <View style={styles.pageContainer}>
-      <TopBar title="Exercício 2 - Descida da Escala" onBack={() => navigation.goBack()} />
+      <HeaderMinimal title="Exercício 2" iconType="exercicios" onBack={() => navigation.goBack()} />
       <View style={[styles.pageContent, { justifyContent: 'flex-start' }]}>
         <View style={{ marginBottom: 16 }}>
           <Text style={styles.pageText}>

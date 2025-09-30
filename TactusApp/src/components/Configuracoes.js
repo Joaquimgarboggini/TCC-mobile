@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Modal, FlatList } from 'react-native';
-import TopBar from './TopBar';
+import HeaderMinimal from './HeaderMinimal';
 import styles from './styles';
 import { useNavigation } from '@react-navigation/native';
 import { ScaleContext } from '../context/ScaleContext';
@@ -41,8 +41,8 @@ const Configuracoes = () => {
   if (!selectedScale && !availableScales) {
     return (
       <View style={styles.pageContainer}>
-        <TopBar title="Configurações" onBack={() => navigation.goBack()} />
-        <View style={{ flex: 1, alignItems: 'center', paddingHorizontal: 20, paddingTop: 40 }}>
+        <HeaderMinimal title="Configurações" iconType="configuracoes" onBack={() => navigation.goBack()} />
+        <View style={{ flex: 1, alignItems: 'center', paddingHorizontal: 20, paddingTop: 20 }}>
           <Text style={styles.pageText}>Carregando configurações...</Text>
         </View>
       </View>
@@ -51,12 +51,12 @@ const Configuracoes = () => {
 
   return (
     <View style={styles.pageContainer}>
-      <TopBar title="Configurações" onBack={handleBack} />
+      <HeaderMinimal title="Configurações" icon="cog" onBack={handleBack} />
       <ScrollView contentContainerStyle={[{ 
         flexGrow: 1, 
         alignItems: 'center', 
         paddingHorizontal: 20, 
-        paddingTop: 40 
+        paddingTop: 20 
       }]}>
         <Text style={[styles.pageText, { fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 30 }]}>
           Configuração da Escala Musical

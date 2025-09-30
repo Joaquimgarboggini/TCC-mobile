@@ -6,7 +6,7 @@ import styles from './styles';
 let BluetoothSerial = null;
 try {
   if (Platform.OS === 'android') {
-    BluetoothSerial = require('react-native-bluetooth-serial');
+    BluetoothSerial = require('react-native-bluetooth-classic');
   }
 } catch (error) {
   console.warn('Bluetooth module not available:', error);
@@ -33,29 +33,14 @@ const ESP32Controller = ({ onKeyPress, onKeyRelease }) => {
       }
 
       // Verificar se Bluetooth está habilitado
-      const isEnabled = await BluetoothSerial.isEnabled();
+      const isEnabled = await BluetoothSerial.isBluetoothEnabled();
       if (!isEnabled) {
-        await BluetoothSerial.enable();
+        await BluetoothSerial.requestBluetoothEnabled();
       }
 
       // Listar dispositivos pareados
-      const pairedDevices = await BluetoothSerial.list();
+      const pairedDevices = await BluetoothSerial.getBondedDevices();
       setDevices(pairedDevices);
-
-      // Configurar listener para dados recebidos com verificação de segurança
-      if (BluetoothSerial.on && typeof BluetoothSerial.on === 'function') {
-        BluetoothSerial.on('read', (data) => {
-          if (data && data.data) {
-            handleESP32Data(data.data);
-          }
-        });
-
-        BluetoothSerial.on('connectionLost', () => {
-          setIsConnected(false);
-          setConnectedDevice(null);
-          Alert.alert('Conexão Perdida', 'Conexão com ESP32 foi perdida');
-        });
-      }
 
     } catch (error) {
       console.error('Erro ao inicializar Bluetooth:', error);
@@ -68,9 +53,21 @@ const ESP32Controller = ({ onKeyPress, onKeyRelease }) => {
 
   const connectToESP32 = async (device) => {
     try {
-      await BluetoothSerial.connect(device.id);
+      const connection = await BluetoothSerial.connectToDevice(device.address);
       setIsConnected(true);
       setConnectedDevice(device);
+      
+      // Configurar listener para dados recebidos
+      connection.onDataReceived((data) => {
+        handleESP32Data(data.data);
+      });
+
+      connection.onDisconnected(() => {
+        setIsConnected(false);
+        setConnectedDevice(null);
+        Alert.alert('Conexão Perdida', 'Conexão com ESP32 foi perdida');
+      });
+      
       Alert.alert('Conectado', `Conectado ao ${device.name}`);
     } catch (error) {
       console.error('Erro ao conectar:', error);
@@ -80,9 +77,11 @@ const ESP32Controller = ({ onKeyPress, onKeyRelease }) => {
 
   const disconnect = async () => {
     try {
-      await BluetoothSerial.disconnect();
-      setIsConnected(false);
-      setConnectedDevice(null);
+      if (connectedDevice) {
+        await BluetoothSerial.disconnect(connectedDevice.address);
+        setIsConnected(false);
+        setConnectedDevice(null);
+      }
     } catch (error) {
       console.error('Erro ao desconectar:', error);
     }

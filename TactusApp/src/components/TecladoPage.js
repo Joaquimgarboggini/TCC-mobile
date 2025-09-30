@@ -1,6 +1,6 @@
 import React, { useEffect, useContext, useState } from 'react';
 import { View, Text, Alert, TouchableOpacity, Platform, ScrollView } from 'react-native';
-import TopBar from './TopBar';
+import HeaderMinimal from './HeaderMinimal';
 import ESP32Controller from './ESP32Controller';
 import VirtualKeyboard from './VirtualKeyboard';
 import styles from './styles';
@@ -204,7 +204,7 @@ const TecladoPage = () => {
 
   return (
     <View style={styles.pageContainer}>
-      <TopBar title="Piano Completo" onBack={() => navigation.goBack()} />
+            <HeaderMinimal title="Teclado" iconType="teclado" onBack={() => navigation.goBack()} />
       <ScrollView contentContainerStyle={[
         { 
           flexGrow: 1, 
@@ -212,7 +212,7 @@ const TecladoPage = () => {
           alignItems: 'center',
           justifyContent: 'flex-start',
           paddingHorizontal: 20,
-          paddingTop: 40
+          paddingTop: 20
         }
       ]}>
         
