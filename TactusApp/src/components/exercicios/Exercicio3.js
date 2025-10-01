@@ -93,7 +93,7 @@ const Exercicio3 = () => {
           justifyContent: 'flex-start',
           paddingTop: 20
         }}>
-          <ExercObject notes={notes} />
+          <ExercObject notes={notes} exerciseName="Exercicio3" />
         </View>
         <View style={{ marginTop: 16 }}>
           <Text style={styles.pageText}>Notas atribuídas aos dedos da luva (C maior):</Text>

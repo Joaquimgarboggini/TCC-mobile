@@ -10,6 +10,10 @@ import Configuracoes from './src/components/Configuracoes';
 import Exercicio1 from './src/components/exercicios/Exercicio1';
 import Exercicio2 from './src/components/exercicios/Exercicio2';
 import Exercicio3 from './src/components/exercicios/Exercicio3';
+import Exercicio5 from './src/components/exercicios/Exercicio5';
+import Exercicio6 from './src/components/exercicios/Exercicio6';
+import Exercicio7 from './src/components/exercicios/Exercicio7';
+import Exercicio8 from './src/components/exercicios/Exercicio8';
 
 import Musica1 from './src/components/musicas/Musica1';
 import Musica2 from './src/components/musicas/Musica2';
@@ -37,7 +41,10 @@ export default function Main() {
           <Stack.Screen name="Exercicio1" component={Exercicio1} options={{ headerShown: false }} />
           <Stack.Screen name="Exercicio2" component={Exercicio2} options={{ headerShown: false }} />
           <Stack.Screen name="Exercicio3" component={Exercicio3} options={{ headerShown: false }} />
-          {/* Adicione Exercicio4, Exercicio5, Exercicio6 aqui */}
+          <Stack.Screen name="Exercicio5" component={Exercicio5} options={{ headerShown: false }} />
+          <Stack.Screen name="Exercicio6" component={Exercicio6} options={{ headerShown: false }} />
+          <Stack.Screen name="Exercicio7" component={Exercicio7} options={{ headerShown: false }} />
+          <Stack.Screen name="Exercicio8" component={Exercicio8} options={{ headerShown: false }} />
           <Stack.Screen name="Musica1" component={Musica1} options={{ headerShown: false }} />
           <Stack.Screen name="Musica2" component={Musica2} options={{ headerShown: false }} />
           <Stack.Screen name="Musica3" component={Musica3} options={{ headerShown: false }} />

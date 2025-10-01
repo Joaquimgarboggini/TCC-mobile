@@ -15,6 +15,3 @@ const ExerciciosIcon = ({ size = 24, color = '#333' }) => {
 };
 
 export default ExerciciosIcon;
-);
-
-export default ExerciciosIcon;

@@ -1,93 +1,200 @@
-// Exemplo de página de exercício
-// filepath: d:\l\bentao\TCC\TCC-MobDir\TCC-mob\TCC-mob\TactusApp\src\components\Exercicio1.js
+// Exercício 1 - Memória Visual (2 segundos)
+// Mostra uma nota aleatória por 2 segundos, depois desaparece e o usuário deve pressionar a tecla correspondente
 import React, { useContext, useEffect, useState } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, Alert } from 'react-native';
 import HeaderMinimal from '../HeaderMinimal';
 import ButtonPage from '../ButtonPage';
-import ExercObject from '../ExercObject';
+import VirtualKeyboard from '../VirtualKeyboard';
 import styles from '../styles';
 import { useNavigation } from '@react-navigation/native';
 import { ScaleContext } from '../../context/ScaleContext';
-
-// Função para montar os valores dos dedos (dedos 5 e 10 = polegares, ficam vazios)
-function getFingersNotes(scaleNotes) {
-  // Usa só os 8 graus: 1 a 7 + oitava acima
-  const fingers = Array(10).fill('');
-  for (let i = 0; i < 8; i++) {
-    // dedos: 0,1,2,3,5,6,7,8 (índices JS)
-    const fingerIndex = i < 4 ? i : i + 1;
-    fingers[fingerIndex] = scaleNotes[i];
-  }
-  return fingers;
-}
+import { saveExerciseScore } from '../ExerciciosPage';
 
 const Exercicio1 = () => {
   const navigation = useNavigation();
-  const { selectedScale, scaleNotes, keyMapping } = useContext(ScaleContext);
-  const [queue, setQueue] = useState([]); // Sistema de queue para notas
+  const { 
+    scaleNotes, 
+    getNoteFromKey, 
+    keyMapping, 
+    startSustainedNote, 
+    stopSustainedNote 
+  } = useContext(ScaleContext);
 
+  // Estados do exercício
+  const [currentRound, setCurrentRound] = useState(1);
+  const [targetNote, setTargetNote] = useState(null);
+  const [showingNote, setShowingNote] = useState(false);
+  const [waitingForInput, setWaitingForInput] = useState(false);
+  const [score, setScore] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [finished, setFinished] = useState(false);
+  const [feedback, setFeedback] = useState('');
+
+  const totalRounds = 10;
+  const noteDisplayTime = 2000; // 2 segundos
+
+  // Função para obter nota aleatória da escala
+  const getRandomNote = () => {
+    if (scaleNotes && scaleNotes.length > 0) {
+      const randomIndex = Math.floor(Math.random() * scaleNotes.length);
+      return scaleNotes[randomIndex];
+    }
+    return 'C5'; // Fallback
+  };
+
+  // Iniciar nova rodada
+  const startNewRound = () => {
+    if (currentRound > totalRounds) {
+      finishExercise();
+      return;
+    }
+
+    const note = getRandomNote();
+    setTargetNote(note);
+    setShowingNote(true);
+    setWaitingForInput(false);
+    setFeedback(`Rodada ${currentRound}/${totalRounds} - Memorize a nota:`);
+
+    // Esconder a nota após 2 segundos
+    setTimeout(() => {
+      setShowingNote(false);
+      setWaitingForInput(true);
+      setFeedback('Agora pressione a tecla da nota que você viu!');
+    }, noteDisplayTime);
+  };
+
+  // Processar resposta do usuário
+  const handleKeyPress = (pressedNote) => {
+    if (!waitingForInput || finished) return;
+
+    if (pressedNote === targetNote) {
+      // Resposta correta
+      const points = 5 + streak;
+      setScore(prevScore => prevScore + points);
+      setStreak(prevStreak => prevStreak + 1);
+      setFeedback(`✅ Correto! +${points} pontos`);
+    } else {
+      // Resposta incorreta
+      setScore(prevScore => Math.max(0, prevScore - 2));
+      setStreak(0);
+      setFeedback(`❌ Incorreto! A nota era ${targetNote}. -2 pontos`);
+    }
+
+    setWaitingForInput(false);
+    
+    // Próxima rodada após 1.5 segundos
+    setTimeout(() => {
+      setCurrentRound(prev => prev + 1);
+    }, 1500);
+  };
+
+  // Finalizar exercício
+  const finishExercise = async () => {
+    setFinished(true);
+    setFeedback(`Exercício concluído! Pontuação final: ${score}`);
+    
+    // Salvar pontuação
+    await saveExerciseScore('Exercicio1', score, true);
+    
+    // Mostrar resultado
+    Alert.alert(
+      'Exercício Concluído!',
+      `Sua pontuação: ${score}/185 pontos`,
+      [
+        { text: 'Voltar', onPress: () => navigation.goBack() }
+      ]
+    );
+  };
+
+  // Iniciar exercício
   useEffect(() => {
     if (scaleNotes && scaleNotes.length > 0) {
-      // Cria a sequência de subida da escala 2 vezes seguidas
-      const sequenciaSubida = [...scaleNotes, ...scaleNotes];
-      setQueue(sequenciaSubida);
-      
-      console.log('Exercício 1 - Escala selecionada:', selectedScale);
-      console.log('Exercício 1 - Notas da escala:', scaleNotes);
-      console.log('Exercício 1 - Sequência (2x subida):', sequenciaSubida);
+      startNewRound();
     }
-  }, [selectedScale, scaleNotes]);
+  }, [currentRound, scaleNotes]);
 
-  // Variáveis para cada dedo
-  let dedo1 = '', dedo2 = '', dedo3 = '', dedo4 = '', dedo5 = '', dedo6 = '', dedo7 = '', dedo8 = '', dedo9 = '', dedo10 = '';
-  let fingers = [];
-
-  if (scaleNotes && scaleNotes.length > 0) {
-    fingers = getFingersNotes(scaleNotes);
-    [dedo1, dedo2, dedo3, dedo4, dedo5, dedo6, dedo7, dedo8, dedo9, dedo10] = fingers;
+  if (finished) {
+    return (
+      <View style={styles.container}>
+        <HeaderMinimal title="Memória Visual 2s" showBackButton={true} />
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <Text style={[styles.pageText, { fontSize: 24, marginBottom: 20 }]}>
+            🎉 Exercício Concluído!
+          </Text>
+          <Text style={[styles.pageText, { fontSize: 18, marginBottom: 10 }]}>
+            Pontuação Final: {score}/185
+          </Text>
+          <Text style={[styles.pageText, { fontSize: 14, color: '#666' }]}>
+            {score >= 150 ? '🏆 Excelente!' : score >= 100 ? '👍 Bom trabalho!' : '💪 Continue praticando!'}
+          </Text>
+        </View>
+      </View>
+    );
   }
 
   return (
-    <View style={styles.pageContainer}>
-      <HeaderMinimal title="Exercício 1" iconType="exercicios" onBack={() => navigation.goBack()} />
-      <View style={[styles.pageContent, { justifyContent: 'flex-start' }]}>
-        <View style={{ marginBottom: 16, marginTop: 20, marginHorizontal: 28 }}>
-          <Text style={styles.pageText}>
-            Neste exercício, você deve tocar a escala de {selectedScale} subindo duas vezes seguidas.
+    <View style={styles.container}>
+      <HeaderMinimal title="Memória Visual 2s" showBackButton={true} />
+      
+      <View style={{ flex: 1, padding: 20 }}>
+        {/* Informações do exercício */}
+        <View style={{ marginBottom: 20, alignItems: 'center' }}>
+          <Text style={[styles.pageText, { fontSize: 16, marginBottom: 10 }]}>
+            {feedback}
+          </Text>
+          <Text style={[styles.pageText, { fontSize: 14, color: '#666' }]}>
+            Pontuação: {score} | Sequência: {streak}
           </Text>
         </View>
-        
-        {queue.length > 0 ? (
-          <>
-            <View style={{ marginBottom: 16 }}>
-              <Text style={[styles.pageText, { fontWeight: 'bold', fontSize: 16 }]}>
-                Escala: {selectedScale}
-              </Text>
-              <Text style={styles.pageText}>
-                Notas: {scaleNotes.join(' - ')}
-              </Text>
-            </View>
 
-            <View style={{ 
-              flex: 1, 
-              width: '100%', 
-              alignItems: 'center', 
-              justifyContent: 'flex-start',
-              paddingTop: 20
+        {/* Área de exibição da nota */}
+        <View style={{
+          backgroundColor: showingNote ? '#E3F2FD' : '#F5F5F5',
+          padding: 40,
+          borderRadius: 15,
+          marginBottom: 30,
+          alignItems: 'center',
+          minHeight: 120,
+          justifyContent: 'center',
+          borderWidth: 2,
+          borderColor: showingNote ? '#2196F3' : '#E0E0E0'
+        }}>
+          {showingNote ? (
+            <Text style={{
+              fontSize: 48,
+              fontWeight: 'bold',
+              color: '#1976D2'
             }}>
-              <ExercObject notes={queue} />
-            </View>
-          </>
-        ) : (
-          <View style={{ alignItems: 'center', marginTop: 50 }}>
-            <Text style={styles.pageText}>
-              ⚠️ Nenhuma escala selecionada
+              {targetNote}
             </Text>
-            <Text style={[styles.pageText, { fontSize: 14, marginTop: 10 }]}>
-              Vá para Configurações e selecione uma escala musical para começar o exercício.
+          ) : waitingForInput ? (
+            <Text style={{
+              fontSize: 18,
+              color: '#666',
+              textAlign: 'center'
+            }}>
+              Qual nota você viu?
             </Text>
-          </View>
-        )}
+          ) : (
+            <Text style={{
+              fontSize: 16,
+              color: '#999',
+              textAlign: 'center'
+            }}>
+              Prepare-se...
+            </Text>
+          )}
+        </View>
+
+        {/* Teclado virtual */}
+        <View style={{ flex: 1 }}>
+          <VirtualKeyboard
+            onKeyPress={handleKeyPress}
+            showLabels={true}
+            highlightedNote={null}
+            disabled={!waitingForInput}
+          />
+        </View>
       </View>
     </View>
   );

@@ -4,6 +4,30 @@ import { ScaleContext } from '../context/ScaleContext';
 
 const { width: screenWidth } = Dimensions.get('window');
 
+// Função para converter notas inglesas para português
+const convertNoteToPortuguese = (note) => {
+  const noteMap = {
+    'C': 'Dó',
+    'C#': 'Dó#',
+    'D': 'Ré',
+    'D#': 'Ré#',
+    'E': 'Mi',
+    'F': 'Fá',
+    'F#': 'Fá#',
+    'G': 'Sol',
+    'G#': 'Sol#',
+    'A': 'Lá',
+    'A#': 'Lá#',
+    'B': 'Si'
+  };
+  
+  // Extrair a nota base (sem o número da oitava)
+  const noteBase = note.replace(/\d+$/, '');
+  const octave = note.match(/\d+$/)?.[0] || '';
+  
+  return noteMap[noteBase] || note;
+};
+
 const VirtualKeyboard = ({ 
   onKeyPress, 
   onKeyRelease, 
@@ -44,10 +68,11 @@ const VirtualKeyboard = ({
 
   // Calcular tamanho das teclas baseado no tamanho da tela
   const whiteKeysCount = keyboardKeys.filter(k => k.type === 'white').length;
-  const availableWidth = Math.min(screenWidth * 0.9, 380); // Largura máxima
+  const margin = 20; // Margem igual nas laterais
+  const availableWidth = screenWidth - (margin * 2); // Descontar margens laterais
   const keyWidth = availableWidth / whiteKeysCount;
-  const whiteKeyHeight = compact ? 60 : 120; // Reduzido de 80 para 60
-  const blackKeyHeight = compact ? 35 : 75;  // Reduzido de 50 para 35
+  const whiteKeyHeight = compact ? 80 : 170; // Aumentado de 140 para 170
+  const blackKeyHeight = compact ? 50 : 110;  // Aumentado de 90 para 110
   const pianoWidth = whiteKeysCount * keyWidth;
 
   const handleKeyPress = (key) => {
@@ -101,6 +126,12 @@ const VirtualKeyboard = ({
                   )}
                 </>
               )}
+              {/* Sempre mostrar a nota, mesmo quando showLabels=false */}
+              {!showLabels && keyData.note && (
+                <Text style={[styles.noteLabel, isPressed && styles.pressedNoteLabel, { fontSize: 14, fontWeight: 'bold' }]}>
+                  {convertNoteToPortuguese(keyData.note)}
+                </Text>
+              )}
             </View>
           </TouchableOpacity>
         );
@@ -111,18 +142,18 @@ const VirtualKeyboard = ({
     // Posicionamento correto das teclas pretas baseado na sequência C5 até B6
     const blackKeyPositions = [
       // Oitava 5: C#5, D#5, F#5, G#5, A#5
-      { key: 'W', left: keyWidth * 0.65 }, // C#5 entre C5(Q) e D5(E)
-      { key: 'R', left: keyWidth * 1.65 }, // D#5 entre D5(E) e E5(Y)  
-      { key: 'I', left: keyWidth * 3.65 }, // F#5 entre F5(U) e G5(O)
-      { key: 'P', left: keyWidth * 4.65 }, // G#5 entre G5(O) e A5(A)
-      { key: 'S', left: keyWidth * 5.65 }, // A#5 entre A5(A) e B5(D)
+      { key: 'W', left: keyWidth * 0.72 }, // Movido um pouco para direita
+      { key: 'R', left: keyWidth * 1.72 }, // Movido um pouco para direita  
+      { key: 'I', left: keyWidth * 3.72 }, // Movido um pouco para direita
+      { key: 'P', left: keyWidth * 4.72 }, // Movido um pouco para direita
+      { key: 'S', left: keyWidth * 5.72 }, // Movido um pouco para direita
       
       // Oitava 6: C#6, D#6, F#6, G#6, A#6
-      { key: 'G', left: keyWidth * 7.65 }, // C#6 entre C6(F) e D6(H)
-      { key: 'J', left: keyWidth * 8.65 }, // D#6 entre D6(H) e E6(K)
-      { key: 'Z', left: keyWidth * 10.65 }, // F#6 entre F6(L) e G6(X)
-      { key: 'C', left: keyWidth * 11.65 }, // G#6 entre G6(X) e A6(V)
-      { key: 'B', left: keyWidth * 12.65 }, // A#6 entre A6(V) e B6(N)
+      { key: 'G', left: keyWidth * 7.72 }, // Movido um pouco para direita
+      { key: 'J', left: keyWidth * 8.72 }, // Movido um pouco para direita
+      { key: 'Z', left: keyWidth * 10.72 }, // Movido um pouco para direita
+      { key: 'C', left: keyWidth * 11.72 }, // Movido um pouco para direita
+      { key: 'B', left: keyWidth * 12.72 }, // Movido um pouco para direita
     ];
 
     return blackKeyPositions.map((pos) => {
@@ -137,7 +168,7 @@ const VirtualKeyboard = ({
           style={[
             styles.blackKey,
             {
-              width: keyWidth * 0.6,
+              width: keyWidth * 0.65, // Aumentado de 0.6 para 0.65
               height: blackKeyHeight,
               left: pos.left,
             },
@@ -160,6 +191,12 @@ const VirtualKeyboard = ({
                 )}
               </>
             )}
+            {/* Sempre mostrar a nota, mesmo quando showLabels=false */}
+            {!showLabels && keyData.note && (
+              <Text style={[styles.blackNoteLabel, isPressed && styles.pressedBlackNoteLabel, { fontSize: 12, fontWeight: 'bold', color: 'white' }]}>
+                {convertNoteToPortuguese(keyData.note)}
+              </Text>
+            )}
           </View>
         </TouchableOpacity>
       );
@@ -170,9 +207,11 @@ const VirtualKeyboard = ({
     <View style={[styles.keyboardContainer, compact && { padding: 8, margin: 5 }]}>
       
       <View style={[styles.pianoContainer, { 
-        height: whiteKeyHeight + (compact ? 10 : 20), 
-        width: pianoWidth,
-        alignSelf: 'center' 
+        height: whiteKeyHeight + (compact ? 15 : 30), // Altura baseada nas teclas
+        width: availableWidth, // Usar largura calculada com margens
+        alignSelf: 'center', // Centralizar o piano
+        justifyContent: 'center', // Centralizar verticalmente
+        alignItems: 'center' // Centralizar horizontalmente
       }]}>
         {/* Teclas brancas */}
         <View style={styles.whiteKeysRow}>
@@ -193,9 +232,9 @@ const VirtualKeyboard = ({
 const styles = StyleSheet.create({
   keyboardContainer: {
     backgroundColor: '#f5f5f5',
-    padding: 15,
-    borderRadius: 12,
-    margin: 10,
+    padding: 0, // Sem padding para ocupar tela toda
+    borderRadius: 0, // Sem bordas arredondadas
+    margin: 0, // Sem margem
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -205,9 +244,9 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
     alignItems: 'center',
-    alignSelf: 'center',
-    width: '95%',
-    maxWidth: 400,
+    alignSelf: 'center', // Centralizar o container
+    width: '100%', // Usar 100% da largura
+    paddingHorizontal: 20, // Margem lateral de 20px igual em ambos os lados
   },
   
   keyboardTitle: {
@@ -253,11 +292,11 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 1,
+      height: 3, // Aumentado de 1 para 3
     },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
-    elevation: 3,
+    shadowOpacity: 0.3, // Aumentado de 0.22 para 0.3
+    shadowRadius: 4, // Aumentado de 2.22 para 4
+    elevation: 6, // Aumentado de 3 para 6
   },
   
   blackKey: {
@@ -272,11 +311,11 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4, // Aumentado de 2 para 4
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOpacity: 0.4, // Aumentado de 0.25 para 0.4
+    shadowRadius: 5, // Aumentado de 3.84 para 5
+    elevation: 8, // Aumentado de 5 para 8
     zIndex: 10,
   },
   

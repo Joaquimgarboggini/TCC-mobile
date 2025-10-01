@@ -15,5 +15,3 @@ const TecladoIcon = ({ size = 24, color = '#333' }) => {
 };
 
 export default TecladoIcon;
-
-export default TecladoIcon;

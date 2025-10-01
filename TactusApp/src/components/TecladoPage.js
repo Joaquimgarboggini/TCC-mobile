@@ -203,50 +203,54 @@ const TecladoPage = () => {
   };
 
   return (
-    <View style={styles.pageContainer}>
-            <HeaderMinimal title="Teclado" iconType="teclado" onBack={() => navigation.goBack()} />
-      <ScrollView contentContainerStyle={[
-        { 
-          flexGrow: 1, 
-          paddingBottom: 20,
-          alignItems: 'center',
-          justifyContent: 'flex-start',
-          paddingHorizontal: 20,
-          paddingTop: 20
-        }
-      ]}>
-        
-        {/* ESP32 Bluetooth Controller */}
-        
-        
-        <Text style={styles.pageText}>Piano Virtual - Escala: {selectedScale}</Text>
-        
-        <View style={{ marginBottom: 10 }}>
-          <Text style={[styles.pageText, { fontSize: 14 }]}>
-            Notas da escala atual: {scaleNotes.join(' - ')}
-          </Text>
-        </View>
-        
-        {/* Teclado Virtual Principal */}
-        <VirtualKeyboard
-          onKeyPress={(key) => {
-            const note = startSustainedNote(key);
-            if (note) {
-              setSustainMessage(`🎹 Sustentando: ${key} → ${note}`);
-            }
-          }}
-          onKeyRelease={(key) => {
-            const note = stopSustainedNote(key);
-            if (note) {
-              setSustainMessage(`🎹 Parou: ${key} → ${note}`);
-              setTimeout(() => setSustainMessage(''), 1000);
-            }
-          }}
-          showLabels={true}
-          compact={false}
-        />
-        
-      </ScrollView>
+    <View style={[styles.pageContainer, { flex: 1, padding: 0 }]}>
+      <HeaderMinimal title="Teclado" iconType="teclado" onBack={() => navigation.goBack()} inverted={true} />
+      
+      {/* Legenda alinhada à esquerda, sem caixa */}
+      <View style={{
+        paddingHorizontal: 20, // Mesmo padding lateral do app
+        marginTop: 5, // Pequena margem para conectar com header
+        marginBottom: 10 // Espaço para o teclado
+      }}>
+        <Text style={{
+          fontSize: 14,
+          fontWeight: 'bold',
+          color: '#333',
+          marginBottom: 4,
+          textAlign: 'left' // Alinhado à esquerda
+        }}>
+          Escala: {selectedScale}
+        </Text>
+        <Text style={{
+          fontSize: 12,
+          color: '#666',
+          textAlign: 'left' // Alinhado à esquerda
+        }}>
+          {scaleNotes.join(' - ')}
+        </Text>
+      </View>
+
+      {/* Teclado com altura fixa */}
+      <VirtualKeyboard
+        onKeyPress={(key) => {
+          const note = startSustainedNote(key);
+          if (note) {
+            setSustainMessage(`🎹 Sustentando: ${key} → ${note}`);
+          }
+        }}
+        onKeyRelease={(key) => {
+          const note = stopSustainedNote(key);
+          if (note) {
+            setSustainMessage(`🎹 Parou: ${key} → ${note}`);
+            setTimeout(() => setSustainMessage(''), 1000);
+          }
+        }}
+        showLabels={false}
+        compact={false}
+      />
+      
+      {/* Espaço inferior */}
+      <View style={{ flex: 1 }} />
     </View>
   );
 };
