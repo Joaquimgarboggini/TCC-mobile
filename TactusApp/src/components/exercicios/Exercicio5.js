@@ -1,79 +1,530 @@
-// Exercício 5 - Escalas: Subida
-// Apresenta as notas da escala na ordem crescente para o usuário tocar subindo 2 vezes
+// Exercício 5 - Leitura de Partitura (Exercício contínuo)
+// Mostra uma partitura que permanece visível até o usuário pressionar a tecla correspondente
 import React, { useContext, useEffect, useState } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, TouchableOpacity, Image, Modal } from 'react-native';
+import Icon from 'react-native-vector-icons/FontAwesome';
 import HeaderMinimal from '../HeaderMinimal';
-import ButtonPage from '../ButtonPage';
-import ExercObject from '../ExercObject';
+import VirtualKeyboard from '../VirtualKeyboard';
 import styles from '../styles';
 import { useNavigation } from '@react-navigation/native';
 import { ScaleContext } from '../../context/ScaleContext';
-
-// Função para montar os valores dos dedos (dedos 5 e 10 = polegares, ficam vazios)
-function getFingersNotes(scaleNotes) {
-  // Usa só os 8 graus: 1 a 7 + oitava acima
-  const fingers = Array(10).fill('');
-  for (let i = 0; i < 8; i++) {
-    // dedos: 0,1,2,3,5,6,7,8 (índices JS)
-    const fingerIndex = i < 4 ? i : i + 1;
-    fingers[fingerIndex] = scaleNotes[i];
-  }
-  return fingers;
-}
+import { saveExerciseScore } from '../ExerciciosPage';
 
 const Exercicio5 = () => {
   const navigation = useNavigation();
-  const { scaleNotes, setActiveFingersNotes } = useContext(ScaleContext);
+  const { 
+    scaleNotes, 
+    getNoteFromKey, 
+    keyMapping, 
+    startSustainedNote, 
+    stopSustainedNote 
+  } = useContext(ScaleContext);
+
+  // Estados do exercício
+  const [currentRound, setCurrentRound] = useState(1);
+  const [targetNote, setTargetNote] = useState(null);
+  const [showingNote, setShowingNote] = useState(false);
+  const [waitingForInput, setWaitingForInput] = useState(false);
+  const [finished, setFinished] = useState(false);
+  const [feedback, setFeedback] = useState('');
+  const [lastResult, setLastResult] = useState(null);
   
-  // Estado principal: fila de notas a serem tocadas
-  const [queue, setQueue] = useState([]);
-  
-  useEffect(() => {
-    // Verificar se scaleNotes está disponível
+  // Contadores
+  const [pontuacao, setPontuacao] = useState(0);
+  const [sequenciaAcertos, setSequenciaAcertos] = useState(0);
+  const [acertos, setAcertos] = useState(0);
+  const [erros, setErros] = useState(0);
+  const [showHelpModal, setShowHelpModal] = useState(false);
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+
+  const totalRounds = 10;
+
+  // Teclas disponíveis (QWER YUIO)
+  const availableKeys = ['Q', 'W', 'E', 'R', 'Y', 'U', 'I', 'O'];
+
+  // Função para obter caminho da imagem da nota
+  const getNoteImagePath = (note) => {
+    const imageMap = {
+      'C5': require('../../../assets/reading/C5.png'),
+      'C#5': require('../../../assets/reading/Csharp5.png'),
+      'D5': require('../../../assets/reading/D5.png'),
+      'D#5': require('../../../assets/reading/Dsharp5.png'),
+      'E5': require('../../../assets/reading/E5.png'),
+      'F5': require('../../../assets/reading/F5.png'),
+      'F#5': require('../../../assets/reading/Fsharp5.png'),
+      'G5': require('../../../assets/reading/G5.png'),
+      'G#5': require('../../../assets/reading/Gsharp5.png'),
+      'A5': require('../../../assets/reading/A5.png'),
+      'A#5': require('../../../assets/reading/Asharp5.png'),
+      'B5': require('../../../assets/reading/B5.png'),
+      'C6': require('../../../assets/reading/C6.png'),
+      'C#6': require('../../../assets/reading/Csharp6.png'),
+      'D6': require('../../../assets/reading/D6.png'),
+      'D#6': require('../../../assets/reading/Dsharp6.png'),
+      'E6': require('../../../assets/reading/E6.png'),
+      'F6': require('../../../assets/reading/F6.png'),
+      'F#6': require('../../../assets/reading/Fsharp6.png'),
+      'G6': require('../../../assets/reading/G6.png'),
+      'G#6': require('../../../assets/reading/Gsharp6.png'),
+      'A6': require('../../../assets/reading/A6.png'),
+      'A#6': require('../../../assets/reading/Asharp6.png'),
+      'B6': require('../../../assets/reading/B6.png'),
+    };
+    
+    return imageMap[note] || require('../../../assets/reading/C5.png');
+  };
+
+  // Função para converter nota para português com oitava
+  const getNoteInPortuguese = (note) => {
+    const noteMap = {
+      'C': 'Dó',
+      'D': 'Ré', 
+      'E': 'Mi',
+      'F': 'Fá',
+      'G': 'Sol',
+      'A': 'Lá',
+      'B': 'Si'
+    };
+    
+    if (!note) return '';
+    
+    const [noteName, octave] = [note.slice(0, -1), note.slice(-1)];
+    const portugueseName = noteMap[noteName] || noteName;
+    
+    return `${portugueseName} ${octave}`;
+  };
+
+  // Gerar nota aleatória disponível
+  const getRandomNote = () => {
     if (scaleNotes && scaleNotes.length > 0) {
-      // Duplicar para que suba 2 vezes seguidas
-      const exerciseNotes = [...scaleNotes, ...scaleNotes];
+      const availableNotes = scaleNotes.filter(note => 
+        availableKeys.some(key => keyMapping[key] === note)
+      );
       
-      setQueue(exerciseNotes);
-      
-      // Configurar os dedos no contexto para esta escala
-      const fingersData = getFingersNotes(scaleNotes);
-      setActiveFingersNotes && setActiveFingersNotes(fingersData);
+      if (availableNotes.length > 0) {
+        const randomIndex = Math.floor(Math.random() * availableNotes.length);
+        return availableNotes[randomIndex];
+      }
     }
-  }, [scaleNotes, setActiveFingersNotes]);
+    return 'C5'; // Fallback
+  };
+
+  // Iniciar nova rodada
+  const startNewRound = () => {
+    if (currentRound > totalRounds) {
+      finishExercise();
+      return;
+    }
+
+    const newNote = getRandomNote();
+    setTargetNote(newNote);
+    setShowingNote(true);
+    setWaitingForInput(true);
+    setFeedback('Leia a partitura e pressione a tecla correspondente:');
+  };
+
+  // Processar resposta do usuário
+  const handleKeyPress = (pressedNote) => {
+    if (!waitingForInput || finished) return;
+
+    console.log('Tecla pressionada:', pressedNote, 'Nota alvo:', targetNote);
+
+    if (pressedNote === targetNote) {
+      // Resposta correta
+      const points = 5 + sequenciaAcertos;
+      setPontuacao(prevScore => prevScore + points);
+      setSequenciaAcertos(prevStreak => prevStreak + 1);
+      setAcertos(prevAcertos => prevAcertos + 1);
+      setLastResult('correct');
+      setFeedback(`✅ Correto! +${points} pontos`);
+      console.log('Resposta correta! Pontos:', points, 'Sequência:', sequenciaAcertos + 1);
+    } else {
+      // Resposta incorreta
+      setPontuacao(prevScore => Math.max(0, prevScore - 2));
+      setSequenciaAcertos(0);
+      setErros(prevErros => prevErros + 1);
+      setLastResult('wrong');
+      setFeedback(`❌ Incorreto! A nota era ${getNoteInPortuguese(targetNote)}. -2 pontos`);
+      console.log('Resposta incorreta! Pontuação:', pontuacao - 2);
+    }
+
+    setWaitingForInput(false);
+    setShowingNote(false);
+    
+    // Próxima rodada após 1.5 segundos
+    setTimeout(() => {
+      setLastResult(null);
+      setCurrentRound(prev => prev + 1);
+    }, 1500);
+  };
+
+  // Finalizar exercício
+  const finishExercise = async () => {
+    setFinished(true);
+    setFeedback(`Exercício concluído! Pontuação final: ${pontuacao}`);
+    
+    // Salvar pontuação
+    await saveExerciseScore('Exercicio5', pontuacao, true);
+    
+    // Mostrar modal de conclusão
+    setShowCompletionModal(true);
+  };
+
+  // Inicializar o exercício quando a escala estiver disponível
+  useEffect(() => {
+    if (scaleNotes && scaleNotes.length > 0 && currentRound === 1) {
+      startNewRound();
+    }
+  }, [scaleNotes]);
+
+  // Gerenciar mudanças de rodada
+  useEffect(() => {
+    if (currentRound > 1 && currentRound <= totalRounds) {
+      startNewRound();
+    } else if (currentRound > totalRounds) {
+      finishExercise();
+    }
+  }, [currentRound]);
 
   return (
     <View style={styles.container}>
-      <HeaderMinimal title="Subida" showBackButton={true} />
+      <HeaderMinimal 
+        title="Leitura de Partitura" 
+        iconType="memoria" 
+        onBack={() => navigation.goBack()}
+        showHelpButton={true}
+        onHelpPress={() => setShowHelpModal(true)}
+      />
       
-      <View style={styles.content}>
-        <View style={styles.contentTop}>
-          <Text style={styles.pageText}>
-            Toque a escala subindo {"\n"}duas vezes seguidas
-          </Text>
-          <Text style={[styles.pageText, { fontSize: 14, color: '#666', marginTop: 10 }]}>
-            Use as teclas do piano para tocar cada nota na sequência correta
-          </Text>
+      <View style={{ flex: 1, paddingHorizontal: 15, paddingTop: 100 }}>
+        {/* CONTADOR ROBUSTO - IDÊNTICO AOS EXERCÍCIOS DE MEMÓRIA */}
+        <View style={{
+          backgroundColor: '#FFFFFF',
+          paddingVertical: 15,
+          paddingHorizontal: 10,
+          marginBottom: 30,
+          borderRadius: 15,
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: 80,
+          elevation: 8,
+          shadowColor: '#000000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.3,
+          shadowRadius: 5,
+        }}>
+          {/* Container dos 4 quadrados */}
+          <View style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            width: '100%',
+            gap: 8,
+          }}>
+            {/* Quadrado ACERTOS - Verde */}
+            <View style={{
+              flex: 1,
+              backgroundColor: '#E8F5E8',
+              borderWidth: 2,
+              borderColor: '#4CAF50',
+              borderRadius: 8,
+              paddingVertical: 8,
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: 50,
+            }}>
+              <Text style={{
+                fontSize: 16,
+                fontWeight: '900',
+                color: '#2E7D32',
+                textAlign: 'center',
+              }}>
+                {acertos || 0}
+              </Text>
+              <Text style={{
+                fontSize: 10,
+                fontWeight: '700',
+                color: '#2E7D32',
+                textAlign: 'center',
+                marginTop: 2,
+              }}>
+                ACERTOS
+              </Text>
+            </View>
+
+            {/* Quadrado ERROS - Vermelho */}
+            <View style={{
+              flex: 1,
+              backgroundColor: '#FFEBEE',
+              borderWidth: 2,
+              borderColor: '#F44336',
+              borderRadius: 8,
+              paddingVertical: 8,
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: 50,
+            }}>
+              <Text style={{
+                fontSize: 16,
+                fontWeight: '900',
+                color: '#C62828',
+                textAlign: 'center',
+              }}>
+                {erros || 0}
+              </Text>
+              <Text style={{
+                fontSize: 10,
+                fontWeight: '700',
+                color: '#C62828',
+                textAlign: 'center',
+                marginTop: 2,
+              }}>
+                ERROS
+              </Text>
+            </View>
+
+            {/* Quadrado PONTOS - Azul */}
+            <View style={{
+              flex: 1,
+              backgroundColor: '#E3F2FD',
+              borderWidth: 2,
+              borderColor: '#2196F3',
+              borderRadius: 8,
+              paddingVertical: 8,
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: 50,
+            }}>
+              <Text style={{
+                fontSize: 16,
+                fontWeight: '900',
+                color: '#1565C0',
+                textAlign: 'center',
+              }}>
+                {pontuacao || 0}
+              </Text>
+              <Text style={{
+                fontSize: 10,
+                fontWeight: '700',
+                color: '#1565C0',
+                textAlign: 'center',
+                marginTop: 2,
+              }}>
+                PONTOS
+              </Text>
+            </View>
+
+            {/* Quadrado SEQUÊNCIA - Laranja */}
+            <View style={{
+              flex: 1,
+              backgroundColor: '#FFF3E0',
+              borderWidth: 2,
+              borderColor: '#FF9800',
+              borderRadius: 8,
+              paddingVertical: 8,
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: 50,
+            }}>
+              <Text style={{
+                fontSize: 16,
+                fontWeight: '900',
+                color: '#E65100',
+                textAlign: 'center',
+              }}>
+                {sequenciaAcertos || 0}
+              </Text>
+              <Text style={{
+                fontSize: 10,
+                fontWeight: '700',
+                color: '#E65100',
+                textAlign: 'center',
+                marginTop: 2,
+              }}>
+                SEQUÊNCIA
+              </Text>
+            </View>
+          </View>
         </View>
-        
-        <View style={styles.contentBottom}>
-          {queue.length > 0 ? (
-            <View style={styles.exerciseContainer}>
-              <ExercObject notes={queue} exerciseName="Exercicio5" />
-            </View>
+
+        {/* Área de exibição da partitura - SEPARADA */}
+        <View style={{
+          backgroundColor: lastResult === 'correct' ? '#E8F5E8' : lastResult === 'wrong' ? '#FFEBEE' : showingNote ? '#E3F2FD' : '#F5F5F5',
+          padding: 30,
+          borderRadius: 12,
+          marginBottom: 20,
+          alignItems: 'center',
+          minHeight: 120,
+          justifyContent: 'center',
+          borderWidth: 2,
+          borderColor: lastResult === 'correct' ? '#4CAF50' : lastResult === 'wrong' ? '#F44336' : showingNote ? '#2196F3' : '#E0E0E0'
+        }}>
+          {showingNote && targetNote ? (
+            <Image
+              source={getNoteImagePath(targetNote)}
+              style={{
+                width: 200,
+                height: 100,
+                resizeMode: 'contain',
+              }}
+            />
           ) : (
-            <View style={styles.loadingContainer}>
-              <Text style={styles.pageText}>Carregando exercício...</Text>
-            </View>
+            <Text style={[styles.pageText, { 
+              fontSize: 16, 
+              color: '#666',
+              textAlign: 'center' 
+            }]}>
+              {feedback || (waitingForInput ? 'Aguardando resposta...' : 'Preparando próxima rodada...')}
+            </Text>
           )}
         </View>
+
+        {/* Teclado virtual */}
+        <VirtualKeyboard
+          onKeyPress={handleKeyPress}
+          showLabels={true}
+          highlightedNote={null}
+          disabled={!waitingForInput}
+          compact={true}
+        />
+
+        {/* Completion Modal */}
+        <Modal
+          visible={showCompletionModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowCompletionModal(false)}
+        >
+          <View style={{
+            flex: 1,
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 20,
+          }}>
+            <View style={{
+              backgroundColor: 'rgba(20, 20, 20, 0.9)',
+              borderRadius: 15,
+              padding: 25,
+              width: '90%',
+              maxWidth: 400,
+              alignItems: 'center',
+            }}>
+              <Text style={{
+                fontSize: 24,
+                fontWeight: 'bold',
+                color: '#fff',
+                marginBottom: 20,
+                textAlign: 'center',
+              }}>
+                🎉 Exercício Concluído!
+              </Text>
+              
+              <Text style={{
+                fontSize: 20,
+                color: '#fff',
+                marginBottom: 10,
+                textAlign: 'center',
+              }}>
+                Pontuação Final: {pontuacao}/95
+              </Text>
+              
+              <Text style={{
+                fontSize: 16,
+                color: '#aaa',
+                marginBottom: 20,
+                textAlign: 'center',
+              }}>
+                Rodadas: {currentRound-1}/{totalRounds}
+              </Text>
+              
+              <Text style={{
+                fontSize: 18,
+                color: '#fff',
+                marginBottom: 30,
+                textAlign: 'center',
+              }}>
+                {pontuacao >= 75 ? '🏆 Excelente!' : 
+                 pontuacao >= 50 ? '👍 Bom trabalho!' : 
+                 '💪 Continue praticando!'}
+              </Text>
+              
+              <TouchableOpacity
+                style={{
+                  backgroundColor: '#4CAF50',
+                  paddingHorizontal: 30,
+                  paddingVertical: 12,
+                  borderRadius: 8,
+                }}
+                onPress={() => {
+                  setShowCompletionModal(false);
+                  navigation.navigate('Exercicios');
+                }}
+              >
+                <Text style={{
+                  fontSize: 16,
+                  fontWeight: 'bold',
+                  color: '#fff',
+                }}>
+                  Voltar aos Exercícios
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Help Modal */}
+        <Modal
+          visible={showHelpModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowHelpModal(false)}
+        >
+          <View style={{
+            flex: 1,
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 20,
+          }}>
+            <View style={{
+              backgroundColor: 'rgba(20, 20, 20, 0.6)',
+              borderRadius: 15,
+              padding: 25,
+              width: '90%',
+              maxWidth: 400,
+            }}>
+              <View style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: 20,
+              }}>
+                <Text style={{
+                  fontSize: 18,
+                  fontWeight: 'bold',
+                  color: '#fff',
+                }}>
+                  Como Jogar?
+                </Text>
+                <TouchableOpacity onPress={() => setShowHelpModal(false)}>
+                  <Icon name="times" size={20} color="#fff" />
+                </TouchableOpacity>
+              </View>
+              <Text style={{
+                fontSize: 16,
+                color: '#fff',
+                lineHeight: 24,
+              }}>
+                Leitura de Partitura 10{'\n\n'}
+                Uma partitura irá aparecer na tela e permanecer visível. Você deverá identificar a nota mostrada na partitura e pressionar a tecla correspondente.{'\n\n'}
+                Pontuação:{'\n'}
+                • Acerto: +5 + sequência{'\n'}
+                • Erro: -2
+              </Text>
+            </View>
+          </View>
+        </Modal>
       </View>
-      
-      <ButtonPage 
-        title="Voltar" 
-        onPress={() => navigation.goBack()} 
-        style={styles.backButton}
-      />
     </View>
   );
 };

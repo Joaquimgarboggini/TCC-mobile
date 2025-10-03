@@ -8,7 +8,7 @@ import { ScaleContext } from '../context/ScaleContext';
 const Configuracoes = () => {
   const navigation = useNavigation();
   const { selectedScale, setSelectedScale, availableScales } = useContext(ScaleContext);
-  const [localScale, setLocalScale] = useState(selectedScale || 'C Maior');
+  const [localScale, setLocalScale] = useState(selectedScale || 'Dó Maior');
 
   // Verificação de segurança para availableScales
   const safeAvailableScales = availableScales || ['C Maior', 'D Maior', 'E Maior', 'F Maior', 'G Maior', 'A Maior', 'B Maior'];

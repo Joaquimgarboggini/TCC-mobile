@@ -24,8 +24,10 @@ const getMaxScore = (exerciseRoute) => {
   
   const maxScores = {
     // Exercícios de Memória
-    'Exercicio1': calculateMaxScore(10), // = 185 pontos (10 notas de memória, 2s cada)
-    'Exercicio2': calculateMaxScore(15), // = 320 pontos (15 notas de memória, 1s cada)
+    'Exercicio1': 95, // 10 rodadas: 5+6+7+8+9+10+11+12+13+14 = 95 pontos máximo
+    'Exercicio2': 185, // 15 rodadas: 5+6+7+8+9+10+11+12+13+14+15+16+17+18+19 = 185 pontos máximo
+    'Exercicio3': 95, // 10 rodadas: 5+6+7+8+9+10+11+12+13+14 = 95 pontos máximo (auditiva 2s)
+    'Exercicio4': 185, // 15 rodadas: 5+6+7+8+9+10+11+12+13+14+15+16+17+18+19 = 185 pontos máximo (auditiva 1s)
     
     // Exercícios de Escalas (8 notas da escala x 2 repetições = 16 notas)
     'Exercicio5': calculateMaxScore(16), // = 216 pontos (escala subindo 2x)
@@ -34,10 +36,6 @@ const getMaxScore = (exerciseRoute) => {
     // Exercícios de Acordes
     'Exercicio7': calculateMaxScore(12), // = 143 pontos (1ª+3ª+5ª+acorde x 2 = 12 notas)
     'Exercicio8': calculateMaxScore(16), // = 216 pontos (1ª+3ª+5ª+7ª+acorde x 2 = 16 notas)
-    
-    // Exercícios antigos (outros tópicos)
-    'Exercicio3': calculateMaxScore(8), // = 76 pontos
-    'Exercicio4': calculateMaxScore(16), // = 216 pontos
   };
   
   return maxScores[exerciseRoute] || 50; // Padrão para exercícios não definidos
@@ -96,6 +94,8 @@ const exerciseTopics = [
     exercises: [
       { label: 'Memória Visual 2s', route: 'Exercicio1' },
       { label: 'Memória Visual 1s', route: 'Exercicio2' },
+      { label: 'Memória de Leitura 2s', route: 'Exercicio3' },
+      { label: 'Memória de Leitura 1s', route: 'Exercicio4' },
     ]
   },
   {
@@ -104,8 +104,8 @@ const exerciseTopics = [
     color: '#EA7CE3',
     icon: require('../../assets/icons/exercicios/LeituraIcon.png'),
     exercises: [
-      { label: 'Exercício de Leitura 1', route: 'Exercicio6' },
-      { label: 'Exercício de Leitura 2', route: 'Exercicio7' },
+      { label: 'Leitura de Partitura 10', route: 'Exercicio5' },
+      { label: 'Leitura de Partitura 20', route: 'Exercicio6' },
     ]
   },
   {
@@ -114,18 +114,8 @@ const exerciseTopics = [
     color: '#EAE17C',
     icon: require('../../assets/icons/exercicios/EscalasIcon.png'),
     exercises: [
-      { label: 'Subida', route: 'Exercicio5' },
-      { label: 'Descida', route: 'Exercicio6' },
-    ]
-  },
-  {
-    id: 'acordes',
-    title: 'Acordes',
-    color: '#7CEABA',
-    icon: require('../../assets/icons/exercicios/IntervalosIcon.png'), // Reutilizando o ícone
-    exercises: [
-      { label: 'Tônica', route: 'Exercicio7' },
-      { label: 'Com 7ª', route: 'Exercicio8' },
+      { label: 'Subida', route: 'Exercicio7' },
+      { label: 'Descida', route: 'Exercicio8' },
     ]
   }
 ];
@@ -323,15 +313,10 @@ const ExerciciosPage = () => {
                     marginBottom: index < topic.exercises.length - 1 ? 8 : 0,
                     borderLeftWidth: 4,
                     borderLeftColor: topic.color,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 1,
-                    elevation: 1,
                     flexDirection: 'row',
                     alignItems: 'center',
                     paddingVertical: 12,
-                    overflow: 'visible',
+                    overflow: 'hidden',
                     position: 'relative',
                   }}
                   onPress={() => navigation.navigate(exercise.route)}
@@ -346,6 +331,8 @@ const ExerciciosPage = () => {
                       paddingVertical: 12,
                       marginLeft: -4, // Compensa a borda esquerda
                       marginVertical: -12, // Compensa o padding vertical do container
+                      borderTopLeftRadius: 4, // Radius que combina com o borderRadius do container
+                      borderBottomLeftRadius: 4,
                     }}>
                       <Text style={{
                         fontSize: 16,

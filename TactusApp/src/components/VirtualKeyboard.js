@@ -34,7 +34,12 @@ const VirtualKeyboard = ({
   showLabels = true, 
   compact = false 
 }) => {
-  const { keyMapping, isKeyPressed, pressedKeys } = useContext(ScaleContext);
+  const { keyMapping, isKeyPressed, pressedKeys, scaleNotes } = useContext(ScaleContext);
+
+  // Função para verificar se uma nota faz parte da escala selecionada
+  const isNoteInScale = (note) => {
+    return scaleNotes && scaleNotes.includes(note);
+  };
 
   // Mapeamento fixo das teclas QWERTY para piano completo C5 até B6
   const keyboardKeys = [
@@ -75,15 +80,15 @@ const VirtualKeyboard = ({
   const blackKeyHeight = compact ? 50 : 110;  // Aumentado de 90 para 110
   const pianoWidth = whiteKeysCount * keyWidth;
 
-  const handleKeyPress = (key) => {
+  const handleKeyPress = (keyData) => {
     if (onKeyPress) {
-      onKeyPress(key);
+      onKeyPress(keyData.note); // Passar a nota em vez da tecla
     }
   };
 
-  const handleKeyRelease = (key) => {
+  const handleKeyRelease = (keyData) => {
     if (onKeyRelease) {
-      onKeyRelease(key);
+      onKeyRelease(keyData.note); // Passar a nota em vez da tecla
     }
   };
 
@@ -92,6 +97,7 @@ const VirtualKeyboard = ({
       .filter(k => k.type === 'white')
       .map((keyData, index) => {
         const isPressed = isKeyPressed && isKeyPressed(keyData.key);
+        const inScale = isNoteInScale(keyData.note);
         
         return (
           <TouchableOpacity
@@ -104,31 +110,31 @@ const VirtualKeyboard = ({
               },
               isPressed && styles.pressedWhiteKey
             ]}
-            onPressIn={() => handleKeyPress(keyData.key)}
-            onPressOut={() => handleKeyRelease(keyData.key)}
+            onPressIn={() => handleKeyPress(keyData)}
+            onPressOut={() => handleKeyRelease(keyData)}
             activeOpacity={0.7}
           >
             <View style={styles.keyContent}>
               {showLabels && (
                 <>
-                  <Text style={[styles.keyLabel, isPressed && styles.pressedKeyLabel, compact && { fontSize: 10 }]}>
-                    {keyData.key}
-                  </Text>
                   {keyData.note && (
-                    <Text style={[styles.noteLabel, isPressed && styles.pressedNoteLabel, compact && { fontSize: 8 }]}>
-                      {keyData.note}
-                    </Text>
-                  )}
-                  {!compact && (
-                    <Text style={styles.octaveLabel}>
-                      Oitava {keyData.octave}
+                    <Text style={[
+                      inScale ? styles.noteLabelInScale : styles.noteLabel, 
+                      isPressed && styles.pressedNoteLabel, 
+                      compact && { fontSize: 10 }
+                    ]}>
+                      {convertNoteToPortuguese(keyData.note)}
                     </Text>
                   )}
                 </>
               )}
               {/* Sempre mostrar a nota, mesmo quando showLabels=false */}
               {!showLabels && keyData.note && (
-                <Text style={[styles.noteLabel, isPressed && styles.pressedNoteLabel, { fontSize: 14, fontWeight: 'bold' }]}>
+                <Text style={[
+                  inScale ? styles.noteLabelInScale : styles.noteLabel, 
+                  isPressed && styles.pressedNoteLabel, 
+                  { fontSize: 14, fontWeight: inScale ? 'bold' : 'bold' }
+                ]}>
                   {convertNoteToPortuguese(keyData.note)}
                 </Text>
               )}
@@ -161,6 +167,7 @@ const VirtualKeyboard = ({
       if (!keyData || !keyData.note) return null;
 
       const isPressed = isKeyPressed && isKeyPressed(keyData.key);
+      const inScale = isNoteInScale(keyData.note);
 
       return (
         <TouchableOpacity
@@ -174,26 +181,31 @@ const VirtualKeyboard = ({
             },
             isPressed && styles.pressedBlackKey
           ]}
-          onPressIn={() => handleKeyPress(keyData.key)}
-          onPressOut={() => handleKeyRelease(keyData.key)}
+          onPressIn={() => handleKeyPress(keyData)}
+          onPressOut={() => handleKeyRelease(keyData)}
           activeOpacity={0.7}
         >
           <View style={styles.keyContent}>
             {showLabels && (
               <>
-                <Text style={[styles.blackKeyLabel, isPressed && styles.pressedBlackKeyLabel, compact && { fontSize: 8 }]}>
-                  {keyData.key}
-                </Text>
                 {keyData.note && (
-                  <Text style={[styles.blackNoteLabel, isPressed && styles.pressedBlackNoteLabel, compact && { fontSize: 7 }]}>
-                    {keyData.note}
+                  <Text style={[
+                    inScale ? styles.blackNoteLabelInScale : styles.blackNoteLabel, 
+                    isPressed && styles.pressedBlackNoteLabel, 
+                    compact && { fontSize: 9 }
+                  ]}>
+                    {convertNoteToPortuguese(keyData.note)}
                   </Text>
                 )}
               </>
             )}
             {/* Sempre mostrar a nota, mesmo quando showLabels=false */}
             {!showLabels && keyData.note && (
-              <Text style={[styles.blackNoteLabel, isPressed && styles.pressedBlackNoteLabel, { fontSize: 12, fontWeight: 'bold', color: 'white' }]}>
+              <Text style={[
+                inScale ? styles.blackNoteLabelInScale : styles.blackNoteLabel, 
+                isPressed && styles.pressedBlackNoteLabel, 
+                { fontSize: 12, fontWeight: 'bold', color: inScale ? '#81C784' : 'white' }
+              ]}>
                 {convertNoteToPortuguese(keyData.note)}
               </Text>
             )}
@@ -232,9 +244,9 @@ const VirtualKeyboard = ({
 const styles = StyleSheet.create({
   keyboardContainer: {
     backgroundColor: '#f5f5f5',
-    padding: 0, // Sem padding para ocupar tela toda
-    borderRadius: 0, // Sem bordas arredondadas
-    margin: 0, // Sem margem
+    padding: 15,
+    borderRadius: 12,
+    margin: 0,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -244,9 +256,9 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
     alignItems: 'center',
-    alignSelf: 'center', // Centralizar o container
-    width: '100%', // Usar 100% da largura
-    paddingHorizontal: 20, // Margem lateral de 20px igual em ambos os lados
+    alignSelf: 'center',
+    width: '100%',
+    minHeight: 120, // Garantir altura mínima
   },
   
   keyboardTitle: {
@@ -348,6 +360,12 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   
+  noteLabelInScale: {
+    fontSize: 10,
+    color: '#4CAF50', // Verde para notas da escala
+    fontWeight: 'bold',
+  },
+  
   octaveLabel: {
     fontSize: 8,
     color: '#999',
@@ -364,6 +382,12 @@ const styles = StyleSheet.create({
   blackNoteLabel: {
     fontSize: 8,
     color: '#ccc',
+  },
+  
+  blackNoteLabelInScale: {
+    fontSize: 8,
+    color: '#81C784', // Verde mais claro para teclas pretas
+    fontWeight: 'bold',
   },
   
   pressedKeyLabel: {

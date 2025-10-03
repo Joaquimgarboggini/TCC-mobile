@@ -9,6 +9,7 @@ import MusicasIcon from '../../assets/icons/MusicasIconNew';
 import TecladoIcon from '../../assets/icons/TecladoIconNew';
 import ConfiguracoesIcon from '../../assets/icons/ConfiguracoesIconNew';
 import AjudaIcon from '../../assets/icons/AjudaIconNew';
+import MemoriaIcon from '../../assets/icons/MemoriaIcon';
 
 const iconComponents = {
   'home': HomeIcon,
@@ -17,9 +18,10 @@ const iconComponents = {
   'teclado': TecladoIcon,
   'configuracoes': ConfiguracoesIcon,
   'ajuda': AjudaIcon,
+  'memoria': MemoriaIcon,
 };
 
-const HeaderMinimal = ({ title, onBack, iconType = 'home', isHome = false, inverted = false }) => {
+const HeaderMinimal = ({ title, onBack, iconType = 'home', isHome = false, inverted = false, showHelpButton = false, onHelpPress }) => {
   const IconComponent = iconComponents[iconType] || HomeIcon;
   
   return (
@@ -32,7 +34,7 @@ const HeaderMinimal = ({ title, onBack, iconType = 'home', isHome = false, inver
       backgroundColor: 'transparent'
     }}>
       {/* Left side - Conteúdo dinâmico baseado em inverted */}
-      <View style={{ alignItems: 'flex-start' }}>
+      <View style={{ alignItems: 'flex-start', flex: 1 }}>
         {isHome ? (
           <View style={{
             backgroundColor: '#151515',
@@ -112,7 +114,7 @@ const HeaderMinimal = ({ title, onBack, iconType = 'home', isHome = false, inver
       </View>
 
       {/* Right side - Conteúdo dinâmico baseado em inverted */}
-      <View style={{ alignItems: 'flex-end' }}>
+      <View style={{ alignItems: 'flex-end', flex: 1 }}>
         {!isHome && inverted ? (
           // Se invertido, mostrar seta de voltar no lado direito
           onBack && (
@@ -153,6 +155,17 @@ const HeaderMinimal = ({ title, onBack, iconType = 'home', isHome = false, inver
             marginTop: -46, // Sobe mais o título
             paddingTop: 54, // Compensa o margin negativo
           }}>
+            {showHelpButton && (
+              <TouchableOpacity
+                onPress={onHelpPress}
+                style={{
+                  marginRight: 12,
+                  padding: 4,
+                }}
+              >
+                <AjudaIcon size={20} color="#333" />
+              </TouchableOpacity>
+            )}
             <Text style={{
               fontSize: 16,
               fontWeight: '600',
