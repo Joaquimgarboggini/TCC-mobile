@@ -5,6 +5,7 @@ import styles from '../styles';
 import { useNavigation } from '@react-navigation/native';
 import { ScaleContext } from '../../context/ScaleContext';
 import VirtualKeyboard from '../VirtualKeyboard';
+import ESP32Controller from '../ESP32Controller';
 
 // Escala específica desta música
 const MUSICA_SCALE = 'C Maior';
@@ -97,25 +98,12 @@ const Musica1 = () => {
       <TopBar title="Música 1" onBack={() => navigation.goBack()} />
       <ScrollView contentContainerStyle={[styles.pageContent, { flexGrow: 1, paddingBottom: 20 }]}>
         <Image source={require('../../../assets/icon.png')} style={{ width: 160, height: 160 }} />
-        <Text style={{ marginTop: 20, fontSize: 16, fontWeight: 'bold' }}>Escala: {MUSICA_SCALE}</Text>
-        <Text style={{ marginTop: 8, fontSize: 14 }}>Notas: {scaleNotes.join(', ')}</Text>
+        <Text style={{ marginTop: 20, fontSize: 16, fontWeight: 'bold' }}>Escala: {String(MUSICA_SCALE || 'N/A')}</Text>
+        <Text style={{ marginTop: 8, fontSize: 14 }}>Notas: {scaleNotes && scaleNotes.length > 0 ? String(scaleNotes.join(', ')) : 'Nenhuma nota disponível'}</Text>
         
         {/* Teclado Virtual para Mobile */}
         {Platform.OS !== 'web' && (
           <VirtualKeyboard
-            onKeyPress={(key) => {
-              const note = startSustainedNote(key);
-              if (note) {
-                setMessage(`🎵 Sustentando: ${key} → ${note}`);
-              }
-            }}
-            onKeyRelease={(key) => {
-              const note = stopSustainedNote(key);
-              if (note) {
-                setMessage(`🎵 Parou: ${key} → ${note}`);
-                setTimeout(() => setMessage(''), 1000);
-              }
-            }}
             showLabels={true}
             compact={false}
           />
@@ -144,6 +132,9 @@ const Musica1 = () => {
           }
         </Text>
       </ScrollView>
+      
+      {/* ESP32 Controller */}
+      <ESP32Controller />
     </View>
   );
 };

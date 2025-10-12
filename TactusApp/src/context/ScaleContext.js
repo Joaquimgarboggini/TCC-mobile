@@ -1,9 +1,10 @@
 import React, { createContext, useState, useEffect } from 'react';
+import useAudioEngine from '../hooks/useAudioEngine';
 
 export const ScaleContext = createContext();
 
-// Teclas QWER YUIO expandidas para C5-B6
-export const qwertyKeys = ['Q', 'W', 'E', 'R', 'Y', 'U', 'I', 'O', 'P', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Z', 'X', 'C', 'V', 'B', 'N'];
+// Teclas QWERTYUIOP para as 10 primeiras notas da escala
+export const qwertyKeys = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'];
 
 // Todas as notas disponíveis em ordem cromática
 const allNotes = [
@@ -42,6 +43,26 @@ const normalizeNote = (note) => {
     }
   }
   return note;
+};
+
+// Função para transpor uma nota uma oitava acima
+const transposeOctaveUp = (note) => {
+  if (!note || typeof note !== 'string') return note;
+  
+  // Extrair a parte da nota e a oitava
+  const noteMatch = note.match(/^([A-G]#?)(\d+)$/);
+  if (!noteMatch) return note;
+  
+  const [, noteName, octave] = noteMatch;
+  const newOctave = parseInt(octave) + 1;
+  
+  // Verificar se a nova nota existe no nosso range (C5-B6)
+  const newNote = `${noteName}${newOctave}`;
+  if (newOctave <= 6) {
+    return newNote;
+  }
+  
+  return note; // Retornar a nota original se estiver fora do range
 };
 
 // Função para gerar escala maior
@@ -165,12 +186,18 @@ export const ScaleProvider = ({ children }) => {
   const [pressedKeys, setPressedKeys] = useState(new Set());
   const [sustainedNotes, setSustainedNotes] = useState(new Set());
 
+  // Estado para instrumento selecionado
+  const [selectedInstrument, setSelectedInstrument] = useState('Piano1');
+
+  // Hook de áudio para tocar sons
+  const { isReady: audioReady, playNote, stopNote, stopAllSounds } = useAudioEngine();
+
   // Função para definir escala temporária (para músicas)
   const setTemporaryScaleForMusic = (scaleName) => {
     if (scales[scaleName]) {
       setPreviousScale(selectedScale); // Salva a escala atual
       setTemporaryScale(scaleName); // Define a escala temporária
-      console.log(`Escala temporária definida: ${scaleName} (anterior: ${selectedScale})`);
+      console.log(`Escala temporária definida: ${String(scaleName)} (anterior: ${String(selectedScale)})`);
     }
   };
 
@@ -178,34 +205,53 @@ export const ScaleProvider = ({ children }) => {
   const restorePreviousScale = () => {
     if (previousScale) {
       setTemporaryScale(null);
-      console.log(`Escala restaurada: ${previousScale}`);
+      console.log(`Escala restaurada: ${String(previousScale)}`);
       setPreviousScale(null);
     }
   };
 
   // Função para obter a nota correspondente a uma tecla pressionada
   const getNoteFromKey = (key) => {
+    if (!key || typeof key !== 'string') return null;
     const upperKey = key.toUpperCase();
     return keyMapping[upperKey] || null;
   };
 
   // Funções para gerenciar teclas sendo seguradas
-  const startSustainedNote = (key) => {
+  const startSustainedNote = async (key) => {
+    if (!key || typeof key !== 'string') return null;
     const upperKey = key.toUpperCase();
     const note = keyMapping[upperKey];
-    if (note && !pressedKeys.has(upperKey)) {
+    if (note) {
+      // SEMPRE adicionar, mesmo se já estiver pressionada
       setPressedKeys(prev => new Set(prev).add(upperKey));
       setSustainedNotes(prev => new Set(prev).add(note));
-      console.log(`🎵 Iniciou sustain: ${upperKey} → ${note}`);
+      
+      // Tocar o som da nota se o áudio estiver pronto
+      if (audioReady) {
+        try {
+          await playNote(note, selectedInstrument);
+          console.log(`🎵 ScaleContext: Som tocado para ${note} com ${selectedInstrument}`);
+        } catch (error) {
+          console.log(`❌ ScaleContext: Erro ao tocar som para ${note}:`, error.message);
+        }
+      }
+      
+      console.log(`🎵 ScaleContext: Iniciou sustain: ${String(upperKey)} → ${String(note)}`);
+      console.log(`🎯 ScaleContext: sustainedNotes agora tem:`, Array.from(sustainedNotes).concat([note]));
       return note;
+    } else {
+      console.log(`❌ ScaleContext: Tecla ${upperKey} não encontrada no keyMapping`);
     }
     return null;
   };
 
   const stopSustainedNote = (key) => {
+    if (!key || typeof key !== 'string') return null;
     const upperKey = key.toUpperCase();
     const note = keyMapping[upperKey];
-    if (note && pressedKeys.has(upperKey)) {
+    if (note) {
+      // SEMPRE remover, mesmo se não estiver pressionada
       setPressedKeys(prev => {
         const newSet = new Set(prev);
         newSet.delete(upperKey);
@@ -216,7 +262,9 @@ export const ScaleProvider = ({ children }) => {
         newSet.delete(note);
         return newSet;
       });
-      console.log(`🎵 Parou sustain: ${upperKey} → ${note}`);
+      
+      // NÃO para mais o som - deixa tocar até o final
+      console.log(`🎵 ScaleContext: Parou sustain (som continua): ${String(upperKey)} → ${String(note)}`);
       return note;
     }
     return null;
@@ -224,6 +272,7 @@ export const ScaleProvider = ({ children }) => {
 
   // Função para verificar se uma tecla está pressionada
   const isKeyPressed = (key) => {
+    if (!key || typeof key !== 'string') return false;
     return pressedKeys.has(key.toUpperCase());
   };
 
@@ -241,9 +290,39 @@ export const ScaleProvider = ({ children }) => {
       const notes = scales[currentScale];
       const mapping = {};
       
-      qwertyKeys.forEach((key, idx) => {
+      // Mapear QWERTYUI para as 8 primeiras notas da escala selecionada
+      qwertyKeys.slice(0, 8).forEach((key, idx) => {
         if (idx < notes.length) {
           mapping[key] = notes[idx];
+        }
+      });
+      
+      // Mapear O e P para 2º e 3º graus uma oitava acima
+      if (notes.length >= 2) {
+        const secondDegreeUp = transposeOctaveUp(notes[1]); // 2º grau uma oitava acima
+        mapping['O'] = secondDegreeUp;
+      }
+      if (notes.length >= 3) {
+        const thirdDegreeUp = transposeOctaveUp(notes[2]); // 3º grau uma oitava acima
+        mapping['P'] = thirdDegreeUp;
+      }
+      
+      // Mapear todas as outras teclas para suas notas fixas do piano
+      const allKeyboardKeys = [
+        { key: 'Q', note: 'C5' }, { key: 'W', note: 'C#5' }, { key: 'E', note: 'D5' }, 
+        { key: 'R', note: 'D#5' }, { key: 'T', note: 'E5' }, { key: 'Y', note: 'F5' }, 
+        { key: 'U', note: 'F#5' }, { key: 'I', note: 'G5' }, { key: 'O', note: 'G#5' }, 
+        { key: 'P', note: 'A5' }, { key: 'A', note: 'A#5' }, { key: 'S', note: 'B5' },
+        { key: 'D', note: 'C6' }, { key: 'F', note: 'C#6' }, { key: 'G', note: 'D6' }, 
+        { key: 'H', note: 'D#6' }, { key: 'J', note: 'E6' }, { key: 'K', note: 'F6' }, 
+        { key: 'L', note: 'F#6' }, { key: 'Z', note: 'G6' }, { key: 'X', note: 'G#6' }, 
+        { key: 'C', note: 'A6' }, { key: 'V', note: 'A#6' }, { key: 'B', note: 'B6' }
+      ];
+      
+      // Para as teclas que NÃO são QWERTYUIOP, usar o mapeamento fixo
+      allKeyboardKeys.forEach(keyData => {
+        if (!qwertyKeys.includes(keyData.key)) {
+          mapping[keyData.key] = keyData.note;
         }
       });
       
@@ -252,8 +331,8 @@ export const ScaleProvider = ({ children }) => {
 
       // Log the notes and their corresponding keys
       console.log('Current Scale:', currentScale);
-      console.log('Scale Notes:', notes);
-      console.log('Key Mapping:', mapping);
+      console.log('Scale Notes (first 10):', notes.slice(0, 10));
+      console.log('Key Mapping QWERTYUIOP:', mapping);
     }
   }, [currentScale]);
 
@@ -276,7 +355,15 @@ export const ScaleProvider = ({ children }) => {
       isKeyPressed,
       isNoteSustained,
       pressedKeys,
-      sustainedNotes
+      sustainedNotes,
+      // Funções de áudio
+      audioReady,
+      playNote,
+      stopNote,
+      stopAllSounds,
+      // Seleção de instrumento
+      selectedInstrument,
+      setSelectedInstrument
     }}>
       {children}
     </ScaleContext.Provider>

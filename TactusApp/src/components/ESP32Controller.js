@@ -1,119 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Alert, Platform } from 'react-native';
+import React from 'react';
+import { View, Text, TouchableOpacity, Platform, ScrollView } from 'react-native';
 import styles from './styles';
+import { useESP32 } from '../hooks/useESP32_real';
 
-// Importação condicional do Bluetooth
-let BluetoothSerial = null;
-try {
-  if (Platform.OS === 'android') {
-    BluetoothSerial = require('react-native-bluetooth-classic');
-  }
-} catch (error) {
-  console.warn('Bluetooth module not available:', error);
-}
-
-const ESP32Controller = ({ onKeyPress, onKeyRelease }) => {
-  const [isConnected, setIsConnected] = useState(false);
-  const [connectedDevice, setConnectedDevice] = useState(null);
-  const [devices, setDevices] = useState([]);
-  const [bluetoothAvailable, setBluetoothAvailable] = useState(false);
-
-  useEffect(() => {
-    if (Platform.OS === 'android' && BluetoothSerial) {
-      setBluetoothAvailable(true);
-      initializeBluetooth();
-    }
-  }, []);
-
-  const initializeBluetooth = async () => {
-    try {
-      if (!BluetoothSerial) {
-        console.warn('BluetoothSerial not available');
-        return;
-      }
-
-      // Verificar se Bluetooth está habilitado
-      const isEnabled = await BluetoothSerial.isBluetoothEnabled();
-      if (!isEnabled) {
-        await BluetoothSerial.requestBluetoothEnabled();
-      }
-
-      // Listar dispositivos pareados
-      const pairedDevices = await BluetoothSerial.getBondedDevices();
-      setDevices(pairedDevices);
-
-    } catch (error) {
-      console.error('Erro ao inicializar Bluetooth:', error);
-      // Não mostrar alerta em desenvolvimento para evitar irritação
-      if (!__DEV__) {
-        Alert.alert('Erro', 'Não foi possível inicializar o Bluetooth');
-      }
-    }
-  };
-
-  const connectToESP32 = async (device) => {
-    try {
-      const connection = await BluetoothSerial.connectToDevice(device.address);
-      setIsConnected(true);
-      setConnectedDevice(device);
-      
-      // Configurar listener para dados recebidos
-      connection.onDataReceived((data) => {
-        handleESP32Data(data.data);
-      });
-
-      connection.onDisconnected(() => {
-        setIsConnected(false);
-        setConnectedDevice(null);
-        Alert.alert('Conexão Perdida', 'Conexão com ESP32 foi perdida');
-      });
-      
-      Alert.alert('Conectado', `Conectado ao ${device.name}`);
-    } catch (error) {
-      console.error('Erro ao conectar:', error);
-      Alert.alert('Erro', 'Não foi possível conectar ao ESP32');
-    }
-  };
-
-  const disconnect = async () => {
-    try {
-      if (connectedDevice) {
-        await BluetoothSerial.disconnect(connectedDevice.address);
-        setIsConnected(false);
-        setConnectedDevice(null);
-      }
-    } catch (error) {
-      console.error('Erro ao desconectar:', error);
-    }
-  };
-
-  const handleESP32Data = (data) => {
-    try {
-      // Protocolo de comunicação com ESP32
-      // Formato esperado: "KEY_DOWN:Q" ou "KEY_UP:Q"
-      const message = data.trim();
-      
-      if (message.startsWith('KEY_DOWN:')) {
-        const key = message.replace('KEY_DOWN:', '');
-        onKeyPress(key.toUpperCase());
-      } else if (message.startsWith('KEY_UP:')) {
-        const key = message.replace('KEY_UP:', '');
-        onKeyRelease(key.toUpperCase());
-      }
-    } catch (error) {
-      console.error('Erro ao processar dados do ESP32:', error);
-    }
-  };
-
-  const sendCommand = async (command) => {
-    if (isConnected) {
-      try {
-        await BluetoothSerial.write(command);
-      } catch (error) {
-        console.error('Erro ao enviar comando:', error);
-      }
-    }
-  };
+const ESP32Controller = () => {
+  const {
+    isConnected,
+    connectedDevice,
+    devices,
+    bluetoothAvailable,
+    logs,
+    connectToESP32,
+    disconnect,
+    clearLogs,
+    requestAllPermissions
+  } = useESP32();
 
   if (Platform.OS !== 'android') {
     return (
@@ -128,46 +29,109 @@ const ESP32Controller = ({ onKeyPress, onKeyRelease }) => {
   return (
     <View style={{ padding: 16, backgroundColor: '#F8F9FA', borderRadius: 8, margin: 16 }}>
       <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 10 }}>
-        🎹 ESP32 Teclado Bluetooth
+        🎹 Teclado Físico ESP32
       </Text>
       
+      {/* Status de Conexão */}
+      <View style={{ marginBottom: 15, padding: 10, backgroundColor: '#FFF', borderRadius: 5 }}>
+        <Text style={{ marginBottom: 5, color: '#666', fontSize: 14 }}>
+          Status: {isConnected ? '✅ Conectado' : '❌ Desconectado'}
+        </Text>
+        
+        {isConnected && connectedDevice && (
+          <View style={{ padding: 8, backgroundColor: '#D4F6D4', borderRadius: 5 }}>
+            <Text style={{ color: '#28A745', fontSize: 14, fontWeight: 'bold' }}>
+              📱 Conectado ao: {connectedDevice.name || connectedDevice.id}
+            </Text>
+            <Text style={{ color: '#666', fontSize: 12, marginTop: 2 }}>
+              Endereço: {connectedDevice.address || 'N/A'}
+            </Text>
+          </View>
+        )}
+      </View>
+      
+      {/* Lista de Dispositivos */}
       {!isConnected ? (
-        <View>
-          <Text style={{ marginBottom: 10, color: '#666' }}>
-            Dispositivos Bluetooth Pareados:
+        <View style={{ marginBottom: 15 }}>
+          <Text style={{ marginBottom: 8, color: '#666', fontSize: 14, fontWeight: 'bold' }}>
+            Dispositivos Disponíveis:
           </Text>
-          {devices.map((device, index) => (
-            <TouchableOpacity
-              key={index}
-              style={[styles.button, { marginVertical: 5, backgroundColor: '#007AFF' }]}
-              onPress={() => connectToESP32(device)}
-            >
-              <Text style={styles.buttonText}>{device.name || device.id}</Text>
-            </TouchableOpacity>
-          ))}
-          {devices.length === 0 && (
-            <Text style={{ color: '#999', fontStyle: 'italic' }}>
+          {devices && devices.length > 0 ? (
+            devices.map((device, index) => (
+              <TouchableOpacity
+                key={String(index || 0)}
+                style={[styles.button, { marginVertical: 3, backgroundColor: '#007AFF', paddingVertical: 10 }]}
+                onPress={() => connectToESP32(device)}
+              >
+                <Text style={[styles.buttonText, { fontSize: 13 }]}>
+                  📱 {String((device.name || device.id) || 'Dispositivo')}
+                </Text>
+              </TouchableOpacity>
+            ))
+          ) : (
+            <Text style={{ color: '#999', fontStyle: 'italic', fontSize: 12 }}>
               Nenhum dispositivo encontrado. Pareie seu ESP32 primeiro.
             </Text>
           )}
-        </View>
-      ) : (
-        <View>
-          <Text style={{ color: '#28A745', marginBottom: 10 }}>
-            ✅ Conectado: {connectedDevice?.name || 'ESP32'}
-          </Text>
+          
           <TouchableOpacity
-            style={[styles.button, { backgroundColor: '#DC3545' }]}
-            onPress={disconnect}
+            style={[styles.button, { marginTop: 10, backgroundColor: '#FFC107', paddingVertical: 8 }]}
+            onPress={requestAllPermissions}
           >
-            <Text style={styles.buttonText}>Desconectar</Text>
+            <Text style={[styles.buttonText, { fontSize: 12, color: '#000' }]}>
+              🔄 Atualizar Lista
+            </Text>
           </TouchableOpacity>
         </View>
+      ) : (
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: '#DC3545', paddingVertical: 10, marginBottom: 15 }]}
+          onPress={disconnect}
+        >
+          <Text style={[styles.buttonText, { fontSize: 13 }]}>🔌 Desconectar</Text>
+        </TouchableOpacity>
       )}
       
-      <Text style={{ fontSize: 12, color: '#666', marginTop: 10, textAlign: 'center' }}>
+      {/* Logs do ESP32 */}
+      <View style={{ marginTop: 10 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#333' }}>
+            📋 Logs ESP32:
+          </Text>
+          <TouchableOpacity
+            style={{ backgroundColor: '#6C757D', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 }}
+            onPress={clearLogs}
+          >
+            <Text style={{ color: 'white', fontSize: 10 }}>Limpar</Text>
+          </TouchableOpacity>
+        </View>
+        
+        <ScrollView 
+          style={{ 
+            backgroundColor: '#000', 
+            borderRadius: 5, 
+            padding: 8, 
+            maxHeight: 150 
+          }}
+          showsVerticalScrollIndicator={true}
+        >
+          {logs.length === 0 ? (
+            <Text style={{ color: '#888', fontStyle: 'italic', fontSize: 11 }}>
+              Aguardando atividade do ESP32...
+            </Text>
+          ) : (
+            logs.map((log, index) => (
+              <Text key={index} style={{ color: '#00FF00', fontSize: 10, marginBottom: 2 }}>
+                {log}
+              </Text>
+            ))
+          )}
+        </ScrollView>
+      </View>
+      
+       <Text style={{ fontSize: 10, color: '#666', marginTop: 10, textAlign: 'center', fontStyle: 'italic' }}>
         {isConnected 
-          ? 'Toque as teclas físicas do ESP32 para tocar' 
+          ? 'Use as luvas ESP32 para tocar. Mapeamento: Q W E R T Y U I O P' 
           : 'Conecte seu ESP32 para usar o teclado físico'
         }
       </Text>

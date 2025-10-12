@@ -5,6 +5,7 @@ import { View, Text, TouchableOpacity, Image, Modal } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import HeaderMinimal from '../HeaderMinimal';
 import VirtualKeyboard from '../VirtualKeyboard';
+import ESP32Invisible from '../ESP32Invisible';
 import styles from '../styles';
 import { useNavigation } from '@react-navigation/native';
 import { ScaleContext } from '../../context/ScaleContext';
@@ -17,7 +18,8 @@ const Exercicio6 = () => {
     getNoteFromKey, 
     keyMapping, 
     startSustainedNote, 
-    stopSustainedNote 
+    stopSustainedNote,
+    sustainedNotes
   } = useContext(ScaleContext);
 
   // Estados do exercício
@@ -37,10 +39,27 @@ const Exercicio6 = () => {
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
 
+  // Escutar mudanças no ScaleContext para detectar ESP32 e teclas virtuais
+  // Para exercícios contínuos (5+), não precisa esperar - aceita qualquer input
+  useEffect(() => {
+    console.log('🔍 Exercicio6: useEffect triggered - sustainedNotes:', sustainedNotes, 'finished:', finished);
+    
+    if (sustainedNotes && sustainedNotes.size > 0 && !finished) {
+      console.log('🎯 Exercicio6: Verificando notas sustentadas...', Array.from(sustainedNotes));
+      
+      // Para exercícios contínuos, processar imediatamente qualquer nota
+      for (const note of sustainedNotes) {
+        console.log('🎹 Exercicio6: Processando nota:', note, 'Target:', targetNote);
+        handleKeyPress(note);
+        break; // Processar apenas uma nota por vez
+      }
+    }
+  }, [sustainedNotes, finished]); // Removido waitingForInput - aceita sempre
+
   const totalRounds = 20;
 
   // Teclas disponíveis (QWER YUIO)
-  const availableKeys = ['Q', 'W', 'E', 'R', 'Y', 'U', 'I', 'O'];
+  const availableKeys = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P']; // Todas as teclas da escala
 
   // Função para obter caminho da imagem da nota
   const getNoteImagePath = (note) => {
@@ -125,9 +144,9 @@ const Exercicio6 = () => {
 
   // Processar resposta do usuário
   const handleKeyPress = (pressedNote) => {
-    if (!waitingForInput || finished) return;
+    if (finished) return; // Só bloqueia se terminou
 
-    console.log('Tecla pressionada:', pressedNote, 'Nota alvo:', targetNote);
+    console.log('🎯 Exercicio6: Tecla pressionada:', pressedNote, 'Nota alvo:', targetNote);
 
     if (pressedNote === targetNote) {
       // Resposta correta
@@ -137,7 +156,7 @@ const Exercicio6 = () => {
       setAcertos(prevAcertos => prevAcertos + 1);
       setLastResult('correct');
       setFeedback(`✅ Correto! +${points} pontos`);
-      console.log('Resposta correta! Pontos:', points, 'Sequência:', sequenciaAcertos + 1);
+      console.log('✅ Exercicio6: Resposta correta! Pontos:', points, 'Sequência:', sequenciaAcertos + 1);
     } else {
       // Resposta incorreta
       setPontuacao(prevScore => Math.max(0, prevScore - 2));
@@ -145,7 +164,7 @@ const Exercicio6 = () => {
       setErros(prevErros => prevErros + 1);
       setLastResult('wrong');
       setFeedback(`❌ Incorreto! A nota era ${getNoteInPortuguese(targetNote)}. -2 pontos`);
-      console.log('Resposta incorreta! Pontuação:', pontuacao - 2);
+      console.log('❌ Exercicio6: Resposta incorreta! Pontuação:', pontuacao - 2);
     }
 
     setWaitingForInput(false);
@@ -237,7 +256,7 @@ const Exercicio6 = () => {
                 color: '#2E7D32',
                 textAlign: 'center',
               }}>
-                {acertos || 0}
+                {String(acertos || 0)}
               </Text>
               <Text style={{
                 fontSize: 10,
@@ -268,7 +287,7 @@ const Exercicio6 = () => {
                 color: '#C62828',
                 textAlign: 'center',
               }}>
-                {erros || 0}
+                {String(erros || 0)}
               </Text>
               <Text style={{
                 fontSize: 10,
@@ -299,7 +318,7 @@ const Exercicio6 = () => {
                 color: '#1565C0',
                 textAlign: 'center',
               }}>
-                {pontuacao || 0}
+                {String(pontuacao || 0)}
               </Text>
               <Text style={{
                 fontSize: 10,
@@ -330,7 +349,7 @@ const Exercicio6 = () => {
                 color: '#E65100',
                 textAlign: 'center',
               }}>
-                {sequenciaAcertos || 0}
+                {String(sequenciaAcertos || 0)}
               </Text>
               <Text style={{
                 fontSize: 10,
@@ -359,7 +378,7 @@ const Exercicio6 = () => {
         }}>
           {showingNote && targetNote ? (
             <Image
-              source={getNoteImagePath(targetNote)}
+              source={getNoteImagePath(targetNote) || require('../../../assets/reading/Reading.png')}
               style={{
                 width: 200,
                 height: 100,
@@ -378,11 +397,9 @@ const Exercicio6 = () => {
         </View>
         {/* Teclado virtual */}
         <VirtualKeyboard
-          onKeyPress={handleKeyPress}
           showLabels={true}
-          highlightedNote={null}
-          disabled={!waitingForInput}
           compact={true}
+          onKeyPress={handleKeyPress}
         />
 
         {/* Completion Modal */}
@@ -423,7 +440,7 @@ const Exercicio6 = () => {
                 marginBottom: 10,
                 textAlign: 'center',
               }}>
-                Pontuação Final: {pontuacao}/310
+                Pontuação Final: {String(pontuacao || 0)}/310
               </Text>
               
               <Text style={{
@@ -432,7 +449,7 @@ const Exercicio6 = () => {
                 marginBottom: 20,
                 textAlign: 'center',
               }}>
-                Rodadas: {currentRound-1}/{totalRounds}
+                Rodadas: {String((currentRound || 1) - 1)}/{String(totalRounds || 0)}
               </Text>
               
               <Text style={{
@@ -522,6 +539,9 @@ const Exercicio6 = () => {
             </View>
           </View>
         </Modal>
+        
+        {/* ESP32 Invisible - permite input via ESP32 sem interface */}
+        <ESP32Invisible />
       </View>
     </View>
   );

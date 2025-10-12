@@ -89,7 +89,7 @@ const HeaderMinimal = ({ title, onBack, iconType = 'home', isHome = false, inver
               fontWeight: '600',
               color: '#333'
             }}>
-              {title}
+              {String(title || '')}
             </Text>
           </View>
         ) : (
@@ -118,7 +118,7 @@ const HeaderMinimal = ({ title, onBack, iconType = 'home', isHome = false, inver
         {!isHome && inverted ? (
           // Se invertido, mostrar seta de voltar no lado direito
           onBack && (
-            <View style={{ paddingRight: 60 }}> {/* Aumentado de 40 para 60 para margem da barra do Android */}
+            <View style={{ paddingRight: 60 }}>
               <TouchableOpacity 
                 onPress={onBack}
                 style={{
@@ -172,7 +172,7 @@ const HeaderMinimal = ({ title, onBack, iconType = 'home', isHome = false, inver
               color: '#333',
               marginRight: 8
             }}>
-              {title}
+              {String(title || '')}
             </Text>
             <IconComponent size={20} color="#333" />
           </View>

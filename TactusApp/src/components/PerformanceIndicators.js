@@ -16,7 +16,7 @@ export const PerformanceIndicators = ({
     <View style={[defaultStyles.container, style]}>
       <View style={[defaultStyles.indicator, defaultStyles.correctIndicator]}>
         <Text style={[defaultStyles.numberText, defaultStyles.correctText]}>
-          {correctAnswers}
+          {String(correctAnswers || 0)}
         </Text>
         <Text style={[defaultStyles.labelText, defaultStyles.correctLabel]}>
           Acertos
@@ -25,7 +25,7 @@ export const PerformanceIndicators = ({
       
       <View style={[defaultStyles.indicator, defaultStyles.wrongIndicator]}>
         <Text style={[defaultStyles.numberText, defaultStyles.wrongText]}>
-          {wrongAnswers}
+          {String(wrongAnswers || 0)}
         </Text>
         <Text style={[defaultStyles.labelText, defaultStyles.wrongLabel]}>
           Erros
@@ -34,7 +34,7 @@ export const PerformanceIndicators = ({
       
       <View style={[defaultStyles.indicator, defaultStyles.scoreIndicator]}>
         <Text style={[defaultStyles.numberText, defaultStyles.scoreText]}>
-          {score}
+          {String(score || 0)}
         </Text>
         <Text style={[defaultStyles.labelText, defaultStyles.scoreLabel]}>
           Pontos
@@ -43,7 +43,7 @@ export const PerformanceIndicators = ({
       
       <View style={[defaultStyles.indicator, defaultStyles.streakIndicator]}>
         <Text style={[defaultStyles.numberText, defaultStyles.streakText]}>
-          {streak}
+          {String(streak || 0)}
         </Text>
         <Text style={[defaultStyles.labelText, defaultStyles.streakLabel]}>
           Sequência

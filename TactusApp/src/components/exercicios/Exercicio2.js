@@ -1,11 +1,12 @@
 // Exercício 2 - Memória Visual (1 segundo)
 // Mostra uma nota aleatória por 1 segundo, depois desaparece e o usuário deve pressionar a tecla correspondente
 import React, { useContext, useEffect, useState } from 'react';
-import { View, Text, Alert, TouchableOpacity, Image, Modal } from 'react-native';
+import { View, Text, Alert, TouchableOpacity, Image, Modal, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import HeaderMinimal from '../HeaderMinimal';
 import ButtonPage from '../ButtonPage';
 import VirtualKeyboard from '../VirtualKeyboard';
+import ESP32Invisible from '../ESP32Invisible';
 import styles from '../styles';
 import { useNavigation } from '@react-navigation/native';
 import { ScaleContext } from '../../context/ScaleContext';
@@ -18,7 +19,8 @@ const Exercicio2 = () => {
     getNoteFromKey, 
     keyMapping, 
     startSustainedNote, 
-    stopSustainedNote 
+    stopSustainedNote,
+    sustainedNotes
   } = useContext(ScaleContext);
 
   // Estados do exercício - DIRETO E SIMPLES
@@ -29,6 +31,7 @@ const Exercicio2 = () => {
   const [finished, setFinished] = useState(false);
   const [feedback, setFeedback] = useState('');
   const [lastResult, setLastResult] = useState(null);
+  const [processedNotes, setProcessedNotes] = useState(new Set());
   
   // CONTADORES SIMPLES QUE VÃO FUNCIONAR
   const [pontuacao, setPontuacao] = useState(0);
@@ -37,6 +40,28 @@ const Exercicio2 = () => {
   const [erros, setErros] = useState(0);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
+
+  // Escutar mudanças no ScaleContext para detectar ESP32 e teclas virtuais
+  useEffect(() => {
+    if (sustainedNotes && waitingForInput && !finished) {
+      // Verificar se há novas notas tocadas
+      for (const note of sustainedNotes) {
+        if (!processedNotes.has(note)) {
+          console.log('Nova nota detectada via ScaleContext:', note);
+          setProcessedNotes(prev => new Set(prev).add(note));
+          handleKeyPress(note);
+          break; // Processar apenas uma nota por vez
+        }
+      }
+    }
+  }, [sustainedNotes, waitingForInput, finished, processedNotes]);
+
+  // Limpar notas processadas quando necessário
+  useEffect(() => {
+    if (!waitingForInput) {
+      setProcessedNotes(new Set());
+    }
+  }, [waitingForInput]);
 
   // Debug - log dos estados
   useEffect(() => {
@@ -49,11 +74,36 @@ const Exercicio2 = () => {
     });
   }, [currentRound, pontuacao, sequenciaAcertos, scaleNotes, keyMapping]);
 
+  // Adicionar listeners de teclado para web
+  useEffect(() => {
+    if (Platform.OS === 'web' && waitingForInput) {
+      const handleKeyDown = (e) => {
+        if (e.repeat) return; // Ignora repetições automáticas
+        if (!e.key || typeof e.key !== 'string') return; // Validação
+        
+        const upperKey = e.key.toUpperCase();
+        const note = keyMapping[upperKey];
+        
+        if (note && waitingForInput) {
+          checkAnswer(note);
+        }
+      };
+
+      // Verificar se está em ambiente web antes de usar window
+      if (typeof window !== 'undefined') {
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+          window.removeEventListener('keydown', handleKeyDown);
+        };
+      }
+    }
+  }, [waitingForInput, keyMapping, targetNote]);
+
   const totalRounds = 15;
   const noteDisplayTime = 1000; // 1 segundo
 
   // Teclas disponíveis (QWER YUIO)
-  const availableKeys = ['Q', 'W', 'E', 'R', 'Y', 'U', 'I', 'O'];
+  const availableKeys = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P']; // Todas as teclas da escala
 
   // Função para converter nota para português com oitava
   const getNoteInPortuguese = (note) => {
@@ -100,7 +150,7 @@ const Exercicio2 = () => {
     setTargetNote(newNote);
     setShowingNote(true);
     setWaitingForInput(false);
-    setFeedback(`Rodada ${currentRound}/${totalRounds} - Memorize a nota!`);
+    setFeedback(`Rodada ${String(currentRound || 0)}/${String(totalRounds || 0)} - Memorize a nota!`);
 
     // Mostrar nota por 1 segundo
     setTimeout(() => {
@@ -123,7 +173,7 @@ const Exercicio2 = () => {
       setSequenciaAcertos(prevStreak => prevStreak + 1);
       setAcertos(prevAcertos => prevAcertos + 1);
       setLastResult('correct');
-      setFeedback(`✅ Correto! +${points} pontos`);
+      setFeedback(`✅ Correto! +${String(points || 0)} pontos`);
       console.log('Resposta correta! Pontos:', points, 'Sequência:', sequenciaAcertos + 1);
     } else {
       // Resposta incorreta
@@ -131,7 +181,7 @@ const Exercicio2 = () => {
       setSequenciaAcertos(0);
       setErros(prevErros => prevErros + 1);
       setLastResult('wrong');
-      setFeedback(`❌ Incorreto! A nota era ${getNoteInPortuguese(targetNote)}. -2 pontos`);
+      setFeedback(`❌ Incorreto! A nota era ${String(getNoteInPortuguese(targetNote) || 'desconhecida')}. -2 pontos`);
       console.log('Resposta incorreta! Pontuação:', pontuacao - 2);
     }
 
@@ -147,7 +197,7 @@ const Exercicio2 = () => {
   // Finalizar exercício
   const finishExercise = async () => {
     setFinished(true);
-    setFeedback(`Exercício concluído! Pontuação final: ${pontuacao}`);
+    setFeedback(`Exercício concluído! Pontuação final: ${String(pontuacao || 0)}`);
     
     // Salvar pontuação
     await saveExerciseScore('Exercicio2', pontuacao, true);
@@ -236,7 +286,7 @@ const Exercicio2 = () => {
                 color: '#2E7D32',
                 textAlign: 'center',
               }}>
-                {acertos || 0}
+                {String(acertos || 0)}
               </Text>
               <Text style={{
                 fontSize: 10,
@@ -267,7 +317,7 @@ const Exercicio2 = () => {
                 color: '#C62828',
                 textAlign: 'center',
               }}>
-                {erros || 0}
+                {String(erros || 0)}
               </Text>
               <Text style={{
                 fontSize: 10,
@@ -298,7 +348,7 @@ const Exercicio2 = () => {
                 color: '#1565C0',
                 textAlign: 'center',
               }}>
-                {pontuacao || 0}
+                {String(pontuacao || 0)}
               </Text>
               <Text style={{
                 fontSize: 10,
@@ -329,7 +379,7 @@ const Exercicio2 = () => {
                 color: '#E65100',
                 textAlign: 'center',
               }}>
-                {sequenciaAcertos || 0}
+                {String(sequenciaAcertos || 0)}
               </Text>
               <Text style={{
                 fontSize: 10,
@@ -363,7 +413,7 @@ const Exercicio2 = () => {
               color: '#1976D2',
               textAlign: 'center'
             }}>
-              {getNoteInPortuguese(targetNote)}
+              {String(getNoteInPortuguese(targetNote) || 'N/A')}
             </Text>
           ) : lastResult === 'correct' ? (
             <Text style={{
@@ -409,11 +459,9 @@ const Exercicio2 = () => {
           marginTop: 100
         }}>
           <VirtualKeyboard
-            onKeyPress={handleKeyPress}
             showLabels={true}
-            highlightedNote={null}
-            disabled={!waitingForInput}
             compact={true}
+            onKeyPress={handleKeyPress}
           />
         </View>
 
@@ -455,7 +503,7 @@ const Exercicio2 = () => {
                 marginBottom: 10,
                 textAlign: 'center',
               }}>
-                Pontuação Final: {pontuacao}/180
+                Pontuação Final: {String(pontuacao || 0)}/180
               </Text>
               
               <Text style={{
@@ -464,7 +512,7 @@ const Exercicio2 = () => {
                 marginBottom: 20,
                 textAlign: 'center',
               }}>
-                Rodadas: {currentRound-1}/{totalRounds}
+                Rodadas: {String((currentRound || 1) - 1)}/{String(totalRounds || 0)}
               </Text>
               
               <Text style={{
@@ -554,6 +602,9 @@ const Exercicio2 = () => {
             </View>
           </View>
         </Modal>
+        
+        {/* ESP32 Invisible - permite input via ESP32 sem interface */}
+        <ESP32Invisible />
       </View>
     </View>
   );

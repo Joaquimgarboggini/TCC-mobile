@@ -99,8 +99,8 @@ const MusicaX = () => {
       <TopBar title="Música X" onBack={() => navigation.goBack()} />
       <ScrollView contentContainerStyle={[styles.pageContent, { flexGrow: 1, paddingBottom: 20 }]}>
         <Image source={require('../../../assets/icon.png')} style={{ width: 160, height: 160 }} />
-        <Text style={{ marginTop: 20, fontSize: 16, fontWeight: 'bold' }}>Escala: {MUSICA_SCALE}</Text>
-        <Text style={{ marginTop: 8, fontSize: 14 }}>Notas: {scaleNotes.join(', ')}</Text>
+        <Text style={{ marginTop: 20, fontSize: 16, fontWeight: 'bold' }}>Escala: {String(MUSICA_SCALE || 'N/A')}</Text>
+        <Text style={{ marginTop: 8, fontSize: 14 }}>Notas: {scaleNotes && scaleNotes.length > 0 ? String(scaleNotes.join(', ')) : 'Nenhuma nota disponível'}</Text>
         
         {/* Teclado Virtual para Mobile */}
         {Platform.OS !== 'web' && (

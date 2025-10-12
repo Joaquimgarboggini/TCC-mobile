@@ -95,13 +95,13 @@ const Musica3 = () => {
       <TopBar title="Música 3" onBack={() => navigation.goBack()} />
       <View style={styles.pageContent}>
         <Image source={require('../../../assets/icon.png')} style={{ width: 180, height: 180 }} />
-        <Text style={{ marginTop: 24, fontSize: 16, fontWeight: 'bold' }}>Escala: {MUSICA_SCALE}</Text>
-        <Text style={{ marginTop: 8, fontSize: 15 }}>Notas: {scaleNotes.join(', ')}</Text>
+        <Text style={{ marginTop: 24, fontSize: 16, fontWeight: 'bold' }}>Escala: {String(MUSICA_SCALE || 'N/A')}</Text>
+        <Text style={{ marginTop: 8, fontSize: 15 }}>Notas: {scaleNotes && scaleNotes.length > 0 ? String(scaleNotes.join(', ')) : 'Nenhuma nota disponível'}</Text>
 
         
 
         {message !== '' && (
-          <Text style={{ marginTop: 16, color: '#34C759', fontSize: 16 }}>{message}</Text>
+          <Text style={{ marginTop: 16, color: '#34C759', fontSize: 16 }}>{String(message || '')}</Text>
         )}
       </View>
     </View>

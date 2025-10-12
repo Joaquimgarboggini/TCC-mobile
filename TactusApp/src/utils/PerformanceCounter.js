@@ -157,20 +157,20 @@ export class PerformanceCounter {
   getFeedbackMessage(result, correctAnswer = '') {
     if (result.type === 'correct') {
       const messages = [
-        `✅ Correto! +${result.points} pontos`,
-        `🎯 Acertou! +${result.points} pontos`,
-        `👍 Muito bem! +${result.points} pontos`,
-        `⭐ Excelente! +${result.points} pontos`
+        `✅ Correto! +${String(result.points || 0)} pontos`,
+        `🎯 Acertou! +${String(result.points || 0)} pontos`,
+        `👍 Muito bem! +${String(result.points || 0)} pontos`,
+        `⭐ Excelente! +${String(result.points || 0)} pontos`
       ];
       
       if (result.streak > 5) {
-        return `🔥 Sequência de ${result.streak}! +${result.points} pontos`;
+        return `🔥 Sequência de ${String(result.streak || 0)}! +${String(result.points || 0)} pontos`;
       }
       
       return messages[Math.min(Math.floor(result.streak / 2), messages.length - 1)];
     } else {
-      const penaltyText = result.penalty > 0 ? ` -${result.penalty} pontos` : '';
-      const answerText = correctAnswer ? ` A resposta era ${correctAnswer}.` : '';
+      const penaltyText = result.penalty > 0 ? ` -${String(result.penalty || 0)} pontos` : '';
+      const answerText = correctAnswer ? ` A resposta era ${String(correctAnswer)}.` : '';
       return `❌ Incorreto!${answerText}${penaltyText}`;
     }
   }

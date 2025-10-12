@@ -134,7 +134,7 @@ const ExercObject = ({ notes = [], exerciseName = 'Exercicio1' }) => {
           // Nota incorreta para o acorde
           setScore(prev => prev - 2);
           setStreak(0);
-          setLastMessage(`Errou! -2 pontos. Acorde esperado: ${currentChord.join(', ')}`);
+          setLastMessage(`Errou! -2 pontos. Acorde esperado: ${String((currentChord || []).join(', '))}`);
           console.log(`❌ Nota incorreta no acorde: esperado ${currentChord.join(', ')}, pressionado ${note}`);
         }
       } else {
@@ -252,7 +252,7 @@ const ExercObject = ({ notes = [], exerciseName = 'Exercicio1' }) => {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', margin: 16 }}>
         <Text style={styles.pageText}>Exercicio Concluido!</Text>
-        <Text style={styles.pageText}>Pontuação final: {score}</Text>
+        <Text style={styles.pageText}>Pontuação final: {String(score || 0)}</Text>
       </View>
     );
   }
@@ -283,7 +283,7 @@ const ExercObject = ({ notes = [], exerciseName = 'Exercicio1' }) => {
           
           return (
             <TouchableOpacity
-              key={`${note}-${index}`}
+              key={`${String(note || 'note')}-${String(index || 0)}`}
               style={[
                 styles.button,
                 {
@@ -359,7 +359,7 @@ const ExercObject = ({ notes = [], exerciseName = 'Exercicio1' }) => {
                 textShadowRadius: 2,
                 fontSize: isChord ? 12 : 14
               }]}>
-                {note} ({expectedKey})
+                {String(note || 'N/A')} ({String(expectedKey || 'N/A')})
               </Text>
             </TouchableOpacity>
           );
@@ -370,86 +370,6 @@ const ExercObject = ({ notes = [], exerciseName = 'Exercicio1' }) => {
       {Platform.OS !== 'web' && (
         <View style={{ marginTop: 10 }}>
           <VirtualKeyboard
-            onKeyPress={(key) => {
-              if (finished) return;
-              startSustainedNote(key);
-              
-              if (isChord) {
-                // Para acordes
-                const note = getNoteFromKey(key);
-                if (currentChord.includes(note)) {
-                  const newPressedKeys = new Set(pressedKeys);
-                  newPressedKeys.add(key);
-                  setPressedKeys(newPressedKeys);
-                  
-                  // Verificar se todas as notas estão pressionadas
-                  const requiredKeys = currentChord.map(n => getKeyFromNote(n));
-                  const allPressed = requiredKeys.every(k => newPressedKeys.has(k));
-                  
-                  if (allPressed) {
-                    setIsHoldingCorrectNote(true);
-                  }
-                }
-              } else {
-                // Para nota única
-                const expectedKey = getKeyFromNote(currentChord[0]);
-                if (key === expectedKey) {
-                  setIsHoldingCorrectNote(true);
-                }
-              }
-            }}
-            onKeyRelease={(key) => {
-              if (finished) return;
-              stopSustainedNote(key);
-              
-              if (isChord) {
-                // Para acordes
-                const note = getNoteFromKey(key);
-                if (currentChord.includes(note)) {
-                  const newPressedKeys = new Set(pressedKeys);
-                  newPressedKeys.delete(key);
-                  setPressedKeys(newPressedKeys);
-                  
-                  // Se todas as notas estavam corretas e agora todas foram soltas
-                  if (isHoldingCorrectNote && newPressedKeys.size === 0) {
-                    setScore(prev => prev + 5 + (streak + 1));
-                    setStreak(prev => prev + 1);
-                    setLastMessage(`✅ Acorde completo! +${5 + (streak + 1)} pontos`);
-                    setIsHoldingCorrectNote(false);
-                    
-                    setTimeout(() => {
-                      setLastMessage("");
-                      const nextIndex = currentIndex + currentChord.length;
-                      if (nextIndex < queue.length) {
-                        setCurrentIndex(nextIndex);
-                      } else {
-                        setFinished(true);
-                      }
-                    }, 800);
-                  }
-                }
-              } else {
-                // Para nota única
-                const expectedKey = getKeyFromNote(currentChord[0]);
-                if (key === expectedKey && isHoldingCorrectNote) {
-                  setActiveNote(currentChord[0]);
-                  setScore(prev => prev + 5 + (streak + 1));
-                  setStreak(prev => prev + 1);
-                  setLastMessage("✅ Acertou! +" + (5 + (streak + 1)) + " pontos");
-                  setIsHoldingCorrectNote(false);
-                  
-                  setTimeout(() => {
-                    setActiveNote(null);
-                    setLastMessage("");
-                    if (currentIndex < queue.length - 1) {
-                      setCurrentIndex(currentIndex + 1);
-                    } else {
-                      setFinished(true);
-                    }
-                  }, 800);
-                }
-              }
-            }}
             showLabels={true}
             compact={true}
           />
@@ -458,7 +378,7 @@ const ExercObject = ({ notes = [], exerciseName = 'Exercicio1' }) => {
       
       <View style={{ marginTop: 12, alignItems: 'center' }}>
         <Text style={{ fontSize: 18, fontWeight: 'bold' }}>
-          Pontuação: {score} | Sequência: {streak}
+          Pontuação: {String(score || 0)} | Sequência: {String(streak || 0)}
         </Text>
         <Text style={{ 
           fontSize: 14, 
@@ -467,15 +387,18 @@ const ExercObject = ({ notes = [], exerciseName = 'Exercicio1' }) => {
           color: lastMessage.includes('Errou') ? '#FF0000' : 
                  lastMessage.includes('Acertou') || lastMessage.includes('completo') ? '#34C759' : '#000'
         }}>
-          {lastMessage}
+          {String(lastMessage || 'Aguardando...')}
         </Text>
         <Text style={{ fontSize: 12, marginTop: 6, color: '#666', textAlign: 'center' }}>
-          Progresso: {currentIndex + 1} / {queue.length}
-          {isChord && ` (Acorde de ${currentChord.length} notas)`}
+          Progresso: {String((currentIndex || 0) + 1)} / {String(queue?.length || 0)}
+          {isChord ? ` (Acorde de ${String(currentChord?.length || 0)} notas)` : ''}
         </Text>
         {isChord && (
           <Text style={{ fontSize: 10, marginTop: 4, color: '#999', textAlign: 'center' }}>
-            Pressione: {currentChord.map(note => `${note}(${getKeyFromNote(note)})`).join(' + ')}
+            Pressione: {currentChord && currentChord.length > 0 ? 
+              String(currentChord.map(note => `${String(note || 'N/A')}(${String(getKeyFromNote(note) || 'N/A')})`).join(' + ')) : 
+              'Carregando...'
+            }
           </Text>
         )}
       </View>

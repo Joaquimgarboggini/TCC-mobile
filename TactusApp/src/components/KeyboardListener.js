@@ -32,17 +32,17 @@ const KeyboardListener = () => {
         Sistema de Escalas - Exemplo
       </Text>
       <Text style={{ marginBottom: 5 }}>
-        Escala atual: {selectedScale}
+        Escala atual: {String(selectedScale || 'Nenhuma')}
       </Text>
       <Text style={{ marginBottom: 5 }}>
-        Notas: {scaleNotes.join(', ')}
+        Notas: {String((scaleNotes || []).join(', '))}
       </Text>
       <Text style={{ marginBottom: 15 }}>
         Mapeamento de Teclas:
       </Text>
       {Object.entries(keyMapping).map(([key, note]) => (
-        <Text key={key} style={{ marginBottom: 5 }}>
-          {key} → {note}
+        <Text key={String(key || 'unknown')} style={{ marginBottom: 5 }}>
+          {String(key || 'N/A')} → {String(note || 'N/A')}
         </Text>
       ))}
     </View>

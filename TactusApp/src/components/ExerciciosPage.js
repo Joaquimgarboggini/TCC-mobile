@@ -16,26 +16,28 @@ const getMaxScore = (exerciseRoute) => {
   
   const calculateMaxScore = (numNotes) => {
     let total = 0;
-    for (let i = 1; i <= numNotes; i++) {
+    for (let i = 0; i < numNotes; i++) {
       total += (5 + i);
     }
     return total;
   };
   
   const maxScores = {
-    // Exercícios de Memória
-    'Exercicio1': 95, // 10 rodadas: 5+6+7+8+9+10+11+12+13+14 = 95 pontos máximo
-    'Exercicio2': 185, // 15 rodadas: 5+6+7+8+9+10+11+12+13+14+15+16+17+18+19 = 185 pontos máximo
-    'Exercicio3': 95, // 10 rodadas: 5+6+7+8+9+10+11+12+13+14 = 95 pontos máximo (auditiva 2s)
-    'Exercicio4': 185, // 15 rodadas: 5+6+7+8+9+10+11+12+13+14+15+16+17+18+19 = 185 pontos máximo (auditiva 1s)
+    // Exercícios de Memória - Fórmula: Σ(5 + i) para i = 0 até n-1
+    'Exercicio1': 95,   // 10 notas: 5+6+7+8+9+10+11+12+13+14 = 95 pontos
+    'Exercicio2': 185,  // 15 notas: 5+6+7+8+9+10+11+12+13+14+15+16+17+18+19 = 185 pontos
+    'Exercicio3': 95,   // 10 notas: 5+6+7+8+9+10+11+12+13+14 = 95 pontos
+    'Exercicio4': 185,  // 15 notas: 5+6+7+8+9+10+11+12+13+14+15+16+17+18+19 = 185 pontos
     
-    // Exercícios de Escalas (8 notas da escala x 2 repetições = 16 notas)
-    'Exercicio5': calculateMaxScore(16), // = 216 pontos (escala subindo 2x)
-    'Exercicio6': calculateMaxScore(16), // = 216 pontos (escala descendo 2x)
+    // Exercícios de Leitura
+    'Exercicio5': 95,   // 10 notas: 5+6+7+8+9+10+11+12+13+14 = 95 pontos
+    'Exercicio6': 290,  // 20 notas: 5+6+7+8+9+10+11+12+13+14+15+16+17+18+19+20+21+22+23+24 = 290 pontos
     
-    // Exercícios de Acordes
-    'Exercicio7': calculateMaxScore(12), // = 143 pontos (1ª+3ª+5ª+acorde x 2 = 12 notas)
-    'Exercicio8': calculateMaxScore(16), // = 216 pontos (1ª+3ª+5ª+7ª+acorde x 2 = 16 notas)
+    // Exercícios de Escalas - 16 notas cada
+    'Exercicio7': 200,  // 16 notas: 5+6+7+8+9+10+11+12+13+14+15+16+17+18+19+20 = 200 pontos
+    'Exercicio8': 200,  // 16 notas: 5+6+7+8+9+10+11+12+13+14+15+16+17+18+19+20 = 200 pontos
+    'Exercicio9': 200,  // 16 notas: 5+6+7+8+9+10+11+12+13+14+15+16+17+18+19+20 = 200 pontos
+    'Exercicio10': 200, // 16 notas: 5+6+7+8+9+10+11+12+13+14+15+16+17+18+19+20 = 200 pontos
   };
   
   return maxScores[exerciseRoute] || 50; // Padrão para exercícios não definidos
@@ -92,10 +94,10 @@ const exerciseTopics = [
     color: '#7C85EA',
     icon: require('../../assets/icons/exercicios/MemoriaIcon.png'),
     exercises: [
-      { label: 'Memória Visual 2s', route: 'Exercicio1' },
-      { label: 'Memória Visual 1s', route: 'Exercicio2' },
-      { label: 'Memória de Leitura 2s', route: 'Exercicio3' },
-      { label: 'Memória de Leitura 1s', route: 'Exercicio4' },
+      { label: 'Visual 1', route: 'Exercicio1' },
+      { label: 'Visual 2', route: 'Exercicio2' },
+      { label: 'Leitura 1', route: 'Exercicio3' },
+      { label: 'Leitura 2', route: 'Exercicio4' },
     ]
   },
   {
@@ -104,8 +106,8 @@ const exerciseTopics = [
     color: '#EA7CE3',
     icon: require('../../assets/icons/exercicios/LeituraIcon.png'),
     exercises: [
-      { label: 'Leitura de Partitura 10', route: 'Exercicio5' },
-      { label: 'Leitura de Partitura 20', route: 'Exercicio6' },
+      { label: 'Partitura 1', route: 'Exercicio5' },
+      { label: 'Partitura 2', route: 'Exercicio6' },
     ]
   },
   {
@@ -114,8 +116,10 @@ const exerciseTopics = [
     color: '#EAE17C',
     icon: require('../../assets/icons/exercicios/EscalasIcon.png'),
     exercises: [
-      { label: 'Subida', route: 'Exercicio7' },
-      { label: 'Descida', route: 'Exercicio8' },
+      { label: 'Subida 1', route: 'Exercicio7' },
+      { label: 'Descida 1', route: 'Exercicio8' },
+      { label: 'Subida 2', route: 'Exercicio9' },
+      { label: 'Descida 2', route: 'Exercicio10' },
     ]
   }
 ];
@@ -129,7 +133,7 @@ const ExerciciosPage = () => {
   useEffect(() => {
     const loadExerciseData = async () => {
       const statuses = {};
-      const exercises = ['Exercicio1', 'Exercicio2', 'Exercicio3', 'Exercicio4', 'Exercicio5', 'Exercicio6', 'Exercicio7', 'Exercicio8'];
+      const exercises = ['Exercicio1', 'Exercicio2', 'Exercicio3', 'Exercicio4', 'Exercicio5', 'Exercicio6', 'Exercicio7', 'Exercicio8', 'Exercicio9', 'Exercicio10'];
       
       for (const exercise of exercises) {
         statuses[exercise] = await getExerciseStatus(exercise);
@@ -156,7 +160,7 @@ const ExerciciosPage = () => {
     const isExpanded = expandedTopic === topic.id;
     
     return (
-      <View key={topic.id} style={{ marginBottom: 15, width: '100%' }}>
+      <View key={String(topic.id || 'topic')} style={{ marginBottom: 15, width: '100%' }}>
         {/* Cabeçalho do tópico */}
         <TouchableOpacity
           style={{
@@ -257,7 +261,7 @@ const ExerciciosPage = () => {
                 {topic.title}
               </Text>
               <Image 
-                source={topic.icon}
+                source={topic.icon || require('../../assets/icon.png')}
                 style={{
                   width: 24,
                   height: 24,
@@ -306,7 +310,7 @@ const ExerciciosPage = () => {
               
               return (
                 <TouchableOpacity
-                  key={index}
+                  key={String(index || 0)}
                   style={{
                     backgroundColor: 'white',
                     borderRadius: 8,
@@ -398,7 +402,7 @@ const ExerciciosPage = () => {
           fontSize: 16,
           color: '#666'
         }]}>
-          Selecione um tópico para ver os exercícios disponíveis:
+          Selecione um exercício
         </Text>
         
         {exerciseTopics.map(renderTopic)}

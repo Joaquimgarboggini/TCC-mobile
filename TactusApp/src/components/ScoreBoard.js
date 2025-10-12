@@ -19,7 +19,7 @@ const ScoreBoard = ({
       {/* Rodada atual */}
       <View style={[styles.indicator, styles.roundIndicator]}>
         <Text style={[styles.numberText, styles.roundText]}>
-          {currentRound}/{totalRounds}
+          {String(currentRound || 1)}/{String(totalRounds || 10)}
         </Text>
         <Text style={[styles.labelText, styles.roundLabel]}>
           Rodada
@@ -29,7 +29,7 @@ const ScoreBoard = ({
       {/* Pontuação */}
       <View style={[styles.indicator, styles.scoreIndicator]}>
         <Text style={[styles.numberText, styles.scoreText]}>
-          {pontuacao}
+          {String(pontuacao || 0)}
         </Text>
         <Text style={[styles.labelText, styles.scoreLabel]}>
           Pontos
@@ -39,7 +39,7 @@ const ScoreBoard = ({
       {/* Sequência de acertos */}
       <View style={[styles.indicator, styles.streakIndicator]}>
         <Text style={[styles.numberText, styles.streakText]}>
-          {sequenciaAcertos}
+          {String(sequenciaAcertos || 0)}
         </Text>
         <Text style={[styles.labelText, styles.streakLabel]}>
           Sequência
@@ -50,7 +50,7 @@ const ScoreBoard = ({
       {acertos > 0 && (
         <View style={[styles.indicator, styles.correctIndicator]}>
           <Text style={[styles.numberText, styles.correctText]}>
-            {acertos}
+            {String(acertos || 0)}
           </Text>
           <Text style={[styles.labelText, styles.correctLabel]}>
             Acertos

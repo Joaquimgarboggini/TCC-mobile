@@ -4,7 +4,7 @@ import styles from './styles';
 
 const ButtonPage = ({ label, onPress, style }) => (
   <TouchableOpacity style={[styles.button, style]} onPress={onPress}>
-    <Text style={styles.buttonText}>{label}</Text>
+    <Text style={styles.buttonText}>{String(label || '')}</Text>
   </TouchableOpacity>
 );
 

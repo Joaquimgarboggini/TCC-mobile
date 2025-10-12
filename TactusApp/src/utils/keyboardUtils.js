@@ -5,13 +5,15 @@ import { Platform } from 'react-native';
  * Funciona apenas em ambiente web, ignora em mobile
  */
 export const addKeyboardListeners = (handleKeyDown, handleKeyUp) => {
-  if (typeof window !== 'undefined' && Platform.OS === 'web') {
+  if (typeof window !== 'undefined' && window.addEventListener && Platform.OS === 'web') {
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
     
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
+      if (window.removeEventListener) {
+        window.removeEventListener('keydown', handleKeyDown);
+        window.removeEventListener('keyup', handleKeyUp);
+      }
     };
   }
   
@@ -23,7 +25,7 @@ export const addKeyboardListeners = (handleKeyDown, handleKeyUp) => {
  * Remove listeners de teclado de forma segura
  */
 export const removeKeyboardListeners = (handleKeyDown, handleKeyUp) => {
-  if (typeof window !== 'undefined' && Platform.OS === 'web') {
+  if (typeof window !== 'undefined' && window.removeEventListener && Platform.OS === 'web') {
     window.removeEventListener('keydown', handleKeyDown);
     window.removeEventListener('keyup', handleKeyUp);
   }
@@ -39,5 +41,6 @@ export const mapKeyToAnswer = (key) => {
     'N': 24, 'M': 25
   };
   
+  if (!key || typeof key !== 'string') return undefined;
   return keyMap[key.toUpperCase()];
 };

@@ -22,8 +22,8 @@ const TopBar = ({ title, onBack, rightComponent }) => (
         </TouchableOpacity>
       )}
     </View>
-    <View style={styles.topBarRight}>{rightComponent}</View>
-    <Text style={styles.topBarTitle}>{title}</Text>
+    <View style={styles.topBarRight}>{rightComponent || null}</View>
+    <Text style={styles.topBarTitle}>{String(title || '')}</Text>
   </View>
 );
 

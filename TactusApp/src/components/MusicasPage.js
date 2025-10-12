@@ -34,7 +34,7 @@ const MusicasPage = () => {
     
     return (
       <View 
-        key={music.route}
+        key={String(music.route || 'music')}
         style={{
           flexDirection: 'row',
           marginBottom: 15,
