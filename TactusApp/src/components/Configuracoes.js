@@ -33,9 +33,6 @@ const Configuracoes = () => {
     { key: 'Lead1', label: 'Lead 1' },
     { key: 'Lead2', label: 'Lead 2' },
     { key: 'Lead3', label: 'Lead 3' },
-    { key: 'E-Guitar1', label: 'Guitarra 1' },
-    { key: 'E-Guitar2', label: 'Guitarra 2' },
-    { key: 'E-Guitar3', label: 'Guitarra 3' },
   ];
 
   const handleScaleSelection = (scale) => {

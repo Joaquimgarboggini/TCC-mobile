@@ -1,85 +1,210 @@
 import { useState, useEffect, useRef } from 'react';
 import { Audio } from 'expo-av';
-import { Platform } from 'react-native';
 
-/**
- * Sistema de áudio com pitch shifting para TactusApp
- * 
- * LIMITAÇÃO CONHECIDA: expo-av não suporta time-stretching independente
- * 
- * Quando você aumenta o 'rate' para fazer pitch shifting, o áudio também acelera,
- * encurtando sua duração. Isso é uma limitação da biblioteca expo-av.
- * 
- * SOLUÇÕES IMPLEMENTADAS:
- * 1. Pitch limitado a 2.0x para evitar encurtamento excessivo
- * 2. Compensação de volume para notas agudas
- * 3. Tabela de pitch mais conservadora
- * 4. Som natural sem repetições artificiais
- * 
- * SOLUÇÕES ALTERNATIVAS (não implementadas devido à complexidade):
- * - FFmpeg com time-stretching nativo
- * - Múltiplos arquivos pré-processados para cada nota
- * - Web Audio API (apenas web)
- */
+const noteNumberMapping = {
+  1: 'C5', 2: 'C#5', 3: 'D5', 4: 'D#5', 5: 'E5', 6: 'F5',
+  7: 'F#5', 8: 'G5', 9: 'G#5', 10: 'A5', 11: 'A#5', 12: 'B5',
+  13: 'C6', 14: 'C#6', 15: 'D6', 16: 'D#6', 17: 'E6', 18: 'F6',
+  19: 'F#6', 20: 'G6', 21: 'G#6', 22: 'A6', 23: 'A#6', 24: 'B6'
+};
 
-// Mapeamento estático dos arquivos de áudio
-const audioAssets = {
-  'Piano1': require('../../assets/audios/Piano1.wav'),
-  'Keys1': require('../../assets/audios/Keys1.wav'),
-  'Keys2': require('../../assets/audios/Keys2.wav'),
-  'Keys3': require('../../assets/audios/Keys3.wav'),
-  'Lead1': require('../../assets/audios/Lead1.wav'),
-  'Lead2': require('../../assets/audios/Lead2.wav'),
-  'Lead3': require('../../assets/audios/Lead3.wav'),
-  'E-Guitar1': require('../../assets/audios/E-Guitar1.wav'),
-  'E-Guitar2': require('../../assets/audios/E-Guitar2.wav'),
-  'E-Guitar3': require('../../assets/audios/E-Guitar3.wav'),
+const instrumentAssets = {
+  Piano1: {
+    'C5': require('../../assets/Audios/Piano1/Piano1-C5.wav'),
+    'C#5': require('../../assets/Audios/Piano1/Piano1-Csharp5.wav'),
+    'D5': require('../../assets/Audios/Piano1/Piano1-D5.wav'),
+    'D#5': require('../../assets/Audios/Piano1/Piano1-Dsharp5.wav'),
+    'E5': require('../../assets/Audios/Piano1/Piano1-E5.wav'),
+    'F5': require('../../assets/Audios/Piano1/Piano1-F5.wav'),
+    'F#5': require('../../assets/Audios/Piano1/Piano1-Fsharp5.wav'),
+    'G5': require('../../assets/Audios/Piano1/Piano1-G5.wav'),
+    'G#5': require('../../assets/Audios/Piano1/Piano1-Gsharp5.wav'),
+    'A5': require('../../assets/Audios/Piano1/Piano1-A5.wav'),
+    'A#5': require('../../assets/Audios/Piano1/Piano1-Asharp5.wav'),
+    'B5': require('../../assets/Audios/Piano1/Piano1-B5.wav'),
+    'C6': require('../../assets/Audios/Piano1/Piano1-C6.wav'),
+    'C#6': require('../../assets/Audios/Piano1/Piano1-Csharp6.wav'),
+    'D6': require('../../assets/Audios/Piano1/Piano1-D6.wav'),
+    'D#6': require('../../assets/Audios/Piano1/Piano1-Dsharp6.wav'),
+    'E6': require('../../assets/Audios/Piano1/Piano1-E6.wav'),
+    'F6': require('../../assets/Audios/Piano1/Piano1-F6.wav'),
+    'F#6': require('../../assets/Audios/Piano1/Piano1-Fsharp6.wav'),
+    'G6': require('../../assets/Audios/Piano1/Piano1-G6.wav'),
+    'G#6': require('../../assets/Audios/Piano1/Piano1-Gsharp6.wav'),
+    'A6': require('../../assets/Audios/Piano1/Piano1-A6.wav'),
+    'A#6': require('../../assets/Audios/Piano1/Piano1-Asharp6.wav'),
+    'B6': require('../../assets/Audios/Piano1/Piano1-B6.wav'),
+  },
+  Keys1: {
+    'C5': require('../../assets/Audios/Keys1/Keys1 (1).wav'),
+    'C#5': require('../../assets/Audios/Keys1/Keys1 (2).wav'),
+    'D5': require('../../assets/Audios/Keys1/Keys1 (3).wav'),
+    'D#5': require('../../assets/Audios/Keys1/Keys1 (4).wav'),
+    'E5': require('../../assets/Audios/Keys1/Keys1 (5).wav'),
+    'F5': require('../../assets/Audios/Keys1/Keys1 (6).wav'),
+    'F#5': require('../../assets/Audios/Keys1/Keys1 (7).wav'),
+    'G5': require('../../assets/Audios/Keys1/Keys1 (8).wav'),
+    'G#5': require('../../assets/Audios/Keys1/Keys1 (9).wav'),
+    'A5': require('../../assets/Audios/Keys1/Keys1 (10).wav'),
+    'A#5': require('../../assets/Audios/Keys1/Keys1 (11).wav'),
+    'B5': require('../../assets/Audios/Keys1/Keys1 (12).wav'),
+    'C6': require('../../assets/Audios/Keys1/Keys1 (13).wav'),
+    'C#6': require('../../assets/Audios/Keys1/Keys1 (14).wav'),
+    'D6': require('../../assets/Audios/Keys1/Keys1 (15).wav'),
+    'D#6': require('../../assets/Audios/Keys1/Keys1 (16).wav'),
+    'E6': require('../../assets/Audios/Keys1/Keys1 (17).wav'),
+    'F6': require('../../assets/Audios/Keys1/Keys1 (18).wav'),
+    'F#6': require('../../assets/Audios/Keys1/Keys1 (19).wav'),
+    'G6': require('../../assets/Audios/Keys1/Keys1 (20).wav'),
+    'G#6': require('../../assets/Audios/Keys1/Keys1 (21).wav'),
+    'A6': require('../../assets/Audios/Keys1/Keys1 (22).wav'),
+    'A#6': require('../../assets/Audios/Keys1/Keys1 (23).wav'),
+    'B6': require('../../assets/Audios/Keys1/Keys1 (24).wav'),
+  },
+  Keys2: {
+    'C5': require('../../assets/Audios/Keys2/Keys2 (1).wav'),
+    'C#5': require('../../assets/Audios/Keys2/Keys2 (2).wav'),
+    'D5': require('../../assets/Audios/Keys2/Keys2 (3).wav'),
+    'D#5': require('../../assets/Audios/Keys2/Keys2 (4).wav'),
+    'E5': require('../../assets/Audios/Keys2/Keys2 (5).wav'),
+    'F5': require('../../assets/Audios/Keys2/Keys2 (6).wav'),
+    'F#5': require('../../assets/Audios/Keys2/Keys2 (7).wav'),
+    'G5': require('../../assets/Audios/Keys2/Keys2 (8).wav'),
+    'G#5': require('../../assets/Audios/Keys2/Keys2 (9).wav'),
+    'A5': require('../../assets/Audios/Keys2/Keys2 (10).wav'),
+    'A#5': require('../../assets/Audios/Keys2/Keys2 (11).wav'),
+    'B5': require('../../assets/Audios/Keys2/Keys2 (12).wav'),
+    'C6': require('../../assets/Audios/Keys2/Keys2 (13).wav'),
+    'C#6': require('../../assets/Audios/Keys2/Keys2 (14).wav'),
+    'D6': require('../../assets/Audios/Keys2/Keys2 (15).wav'),
+    'D#6': require('../../assets/Audios/Keys2/Keys2 (16).wav'),
+    'E6': require('../../assets/Audios/Keys2/Keys2 (17).wav'),
+    'F6': require('../../assets/Audios/Keys2/Keys2 (18).wav'),
+    'F#6': require('../../assets/Audios/Keys2/Keys2 (19).wav'),
+    'G6': require('../../assets/Audios/Keys2/Keys2 (20).wav'),
+    'G#6': require('../../assets/Audios/Keys2/Keys2 (21).wav'),
+    'A6': require('../../assets/Audios/Keys2/Keys2 (22).wav'),
+    'A#6': require('../../assets/Audios/Keys2/Keys2 (23).wav'),
+    'B6': require('../../assets/Audios/Keys2/Keys2 (24).wav'),
+  },
+  Keys3: {
+    'C5': require('../../assets/Audios/Keys3/Keys3 (1).wav'),
+    'C#5': require('../../assets/Audios/Keys3/Keys3 (2).wav'),
+    'D5': require('../../assets/Audios/Keys3/Keys3 (3).wav'),
+    'D#5': require('../../assets/Audios/Keys3/Keys3 (4).wav'),
+    'E5': require('../../assets/Audios/Keys3/Keys3 (5).wav'),
+    'F5': require('../../assets/Audios/Keys3/Keys3 (6).wav'),
+    'F#5': require('../../assets/Audios/Keys3/Keys3 (7).wav'),
+    'G5': require('../../assets/Audios/Keys3/Keys3 (8).wav'),
+    'G#5': require('../../assets/Audios/Keys3/Keys3 (9).wav'),
+    'A5': require('../../assets/Audios/Keys3/Keys3 (10).wav'),
+    'A#5': require('../../assets/Audios/Keys3/Keys3 (11).wav'),
+    'B5': require('../../assets/Audios/Keys3/Keys3 (12).wav'),
+    'C6': require('../../assets/Audios/Keys3/Keys3 (13).wav'),
+    'C#6': require('../../assets/Audios/Keys3/Keys3 (14).wav'),
+    'D6': require('../../assets/Audios/Keys3/Keys3 (15).wav'),
+    'D#6': require('../../assets/Audios/Keys3/Keys3 (16).wav'),
+    'E6': require('../../assets/Audios/Keys3/Keys3 (17).wav'),
+    'F6': require('../../assets/Audios/Keys3/Keys3 (18).wav'),
+    'F#6': require('../../assets/Audios/Keys3/Keys3 (19).wav'),
+    'G6': require('../../assets/Audios/Keys3/Keys3 (20).wav'),
+    'G#6': require('../../assets/Audios/Keys3/Keys3 (21).wav'),
+    'A6': require('../../assets/Audios/Keys3/Keys3 (22).wav'),
+    'A#6': require('../../assets/Audios/Keys3/Keys3 (23).wav'),
+    'B6': require('../../assets/Audios/Keys3/Keys3 (24).wav'),
+  },
+  Lead1: {
+    'C5': require('../../assets/Audios/Lead1/Lead1 (1).wav'),
+    'C#5': require('../../assets/Audios/Lead1/Lead1 (2).wav'),
+    'D5': require('../../assets/Audios/Lead1/Lead1 (3).wav'),
+    'D#5': require('../../assets/Audios/Lead1/Lead1 (4).wav'),
+    'E5': require('../../assets/Audios/Lead1/Lead1 (5).wav'),
+    'F5': require('../../assets/Audios/Lead1/Lead1 (6).wav'),
+    'F#5': require('../../assets/Audios/Lead1/Lead1 (7).wav'),
+    'G5': require('../../assets/Audios/Lead1/Lead1 (8).wav'),
+    'G#5': require('../../assets/Audios/Lead1/Lead1 (9).wav'),
+    'A5': require('../../assets/Audios/Lead1/Lead1 (10).wav'),
+    'A#5': require('../../assets/Audios/Lead1/Lead1 (11).wav'),
+    'B5': require('../../assets/Audios/Lead1/Lead1 (12).wav'),
+    'C6': require('../../assets/Audios/Lead1/Lead1 (13).wav'),
+    'C#6': require('../../assets/Audios/Lead1/Lead1 (14).wav'),
+    'D6': require('../../assets/Audios/Lead1/Lead1 (15).wav'),
+    'D#6': require('../../assets/Audios/Lead1/Lead1 (16).wav'),
+    'E6': require('../../assets/Audios/Lead1/Lead1 (17).wav'),
+    'F6': require('../../assets/Audios/Lead1/Lead1 (18).wav'),
+    'F#6': require('../../assets/Audios/Lead1/Lead1 (19).wav'),
+    'G6': require('../../assets/Audios/Lead1/Lead1 (20).wav'),
+    'G#6': require('../../assets/Audios/Lead1/Lead1 (21).wav'),
+    'A6': require('../../assets/Audios/Lead1/Lead1 (22).wav'),
+    'A#6': require('../../assets/Audios/Lead1/Lead1 (23).wav'),
+    'B6': require('../../assets/Audios/Lead1/Lead1 (24).wav'),
+  },
+  Lead2: {
+    'C5': require('../../assets/Audios/Lead2/Lead2 (1).wav'),
+    'C#5': require('../../assets/Audios/Lead2/Lead2 (2).wav'),
+    'D5': require('../../assets/Audios/Lead2/Lead2 (3).wav'),
+    'D#5': require('../../assets/Audios/Lead2/Lead2 (4).wav'),
+    'E5': require('../../assets/Audios/Lead2/Lead2 (5).wav'),
+    'F5': require('../../assets/Audios/Lead2/Lead2 (6).wav'),
+    'F#5': require('../../assets/Audios/Lead2/Lead2 (7).wav'),
+    'G5': require('../../assets/Audios/Lead2/Lead2 (8).wav'),
+    'G#5': require('../../assets/Audios/Lead2/Lead2 (9).wav'),
+    'A5': require('../../assets/Audios/Lead2/Lead2 (10).wav'),
+    'A#5': require('../../assets/Audios/Lead2/Lead2 (11).wav'),
+    'B5': require('../../assets/Audios/Lead2/Lead2 (12).wav'),
+    'C6': require('../../assets/Audios/Lead2/Lead2 (13).wav'),
+    'C#6': require('../../assets/Audios/Lead2/Lead2 (14).wav'),
+    'D6': require('../../assets/Audios/Lead2/Lead2 (15).wav'),
+    'D#6': require('../../assets/Audios/Lead2/Lead2 (16).wav'),
+    'E6': require('../../assets/Audios/Lead2/Lead2 (17).wav'),
+    'F6': require('../../assets/Audios/Lead2/Lead2 (18).wav'),
+    'F#6': require('../../assets/Audios/Lead2/Lead2 (19).wav'),
+    'G6': require('../../assets/Audios/Lead2/Lead2 (20).wav'),
+    'G#6': require('../../assets/Audios/Lead2/Lead2 (21).wav'),
+    'A6': require('../../assets/Audios/Lead2/Lead2 (22).wav'),
+    'A#6': require('../../assets/Audios/Lead2/Lead2 (23).wav'),
+    'B6': require('../../assets/Audios/Lead2/Lead2 (24).wav'),
+  },
+  Lead3: {
+    'C5': require('../../assets/Audios/Lead3/lead3 (1).wav'),
+    'C#5': require('../../assets/Audios/Lead3/lead3 (2).wav'),
+    'D5': require('../../assets/Audios/Lead3/lead3 (3).wav'),
+    'D#5': require('../../assets/Audios/Lead3/lead3 (4).wav'),
+    'E5': require('../../assets/Audios/Lead3/lead3 (5).wav'),
+    'F5': require('../../assets/Audios/Lead3/lead3 (6).wav'),
+    'F#5': require('../../assets/Audios/Lead3/lead3 (7).wav'),
+    'G5': require('../../assets/Audios/Lead3/lead3 (8).wav'),
+    'G#5': require('../../assets/Audios/Lead3/lead3 (9).wav'),
+    'A5': require('../../assets/Audios/Lead3/lead3 (10).wav'),
+    'A#5': require('../../assets/Audios/Lead3/lead3 (11).wav'),
+    'B5': require('../../assets/Audios/Lead3/lead3 (12).wav'),
+    'C6': require('../../assets/Audios/Lead3/lead3 (13).wav'),
+    'C#6': require('../../assets/Audios/Lead3/lead3 (14).wav'),
+    'D6': require('../../assets/Audios/Lead3/lead3 (15).wav'),
+    'D#6': require('../../assets/Audios/Lead3/lead3 (16).wav'),
+    'E6': require('../../assets/Audios/Lead3/lead3 (17).wav'),
+    'F6': require('../../assets/Audios/Lead3/lead3 (18).wav'),
+    'F#6': require('../../assets/Audios/Lead3/lead3 (19).wav'),
+    'G6': require('../../assets/Audios/Lead3/lead3 (20).wav'),
+    'G#6': require('../../assets/Audios/Lead3/lead3 (21).wav'),
+    'A6': require('../../assets/Audios/Lead3/lead3 (22).wav'),
+    'A#6': require('../../assets/Audios/Lead3/lead3 (23).wav'),
+    'B6': require('../../assets/Audios/Lead3/lead3 (24).wav'),
+  },
 };
 
 const useAudioEngine = () => {
   const [isReady, setIsReady] = useState(false);
   const soundObjectsRef = useRef({});
 
-  // Tabela de pitch shifts para cada nota
-  // C5 é a base (1.0), outras notas são relativas
-  // NOTA: Valores mais conservadores para minimizar encurtamento excessivo
-  const pitchTable = {
-    'C5': 1.0,      // Base (Dó5)
-    'C#5': 1.050,   // Dó# (reduzido de 1.059)
-    'D5': 1.100,    // Ré (reduzido de 1.122)
-    'D#5': 1.150,   // Ré# (reduzido de 1.189)
-    'E5': 1.200,    // Mi (reduzido de 1.260)
-    'F5': 1.250,    // Fá (reduzido de 1.335)
-    'F#5': 1.300,   // Fá# (reduzido de 1.414)
-    'G5': 1.350,    // Sol (reduzido de 1.498)
-    'G#5': 1.400,   // Sol# (reduzido de 1.587)
-    'A5': 1.450,    // Lá (reduzido de 1.682)
-    'A#5': 1.500,   // Lá# (reduzido de 1.782)
-    'B5': 1.550,    // Si (reduzido de 1.888)
-    'C6': 1.600,    // Dó6 (reduzido de 2.0)
-    'C#6': 1.650,   // Dó#6
-    'D6': 1.700,    // Ré6
-    'D#6': 1.750,   // Ré#6
-    'E6': 1.800,    // Mi6
-    'F6': 1.850,    // Fá6
-    'F#6': 1.900,   // Fá#6
-    'G6': 1.950,    // Sol6
-    'G#6': 2.000,   // Sol#6
-    'A6': 2.050,    // Lá6
-    'A#6': 2.100,   // Lá#6
-    'B6': 2.150     // Si6
-  };
-
   const addLog = (message) => {
     const timestamp = new Date().toLocaleTimeString();
-    console.log(`🎵 AudioEngine: [${timestamp}] ${message}`);
+    console.log('AudioEngine: [' + timestamp + '] ' + message);
   };
 
-  // Configurar áudio no início
   useEffect(() => {
     const setupAudio = async () => {
       try {
-        // Configurar modo de áudio para permitir reprodução simultânea
         await Audio.setAudioModeAsync({
           allowsRecordingIOS: false,
           staysActiveInBackground: false,
@@ -88,89 +213,66 @@ const useAudioEngine = () => {
           playThroughEarpieceAndroid: false,
         });
 
-        addLog('Áudio configurado com sucesso');
+        addLog('Audio configurado com sucesso');
         setIsReady(true);
       } catch (error) {
-        addLog(`Erro ao configurar áudio: ${error.message}`);
+        addLog('Erro ao configurar audio: ' + error.message);
       }
     };
 
     setupAudio();
   }, []);
 
-  // Função para tocar uma nota com pitch shifting
   const playNote = async (note, instrument = 'Piano1') => {
     if (!isReady) {
-      addLog('AudioEngine não está pronto ainda');
+      addLog('AudioEngine nao esta pronto ainda');
       return;
     }
 
     try {
-      const pitch = pitchTable[note];
-      if (!pitch) {
-        addLog(`Nota ${note} não encontrada na tabela de pitch`);
+      if (!instrumentAssets[instrument]) {
+        addLog('Instrumento ' + instrument + ' nao encontrado');
         return;
       }
 
-      // Verificar se o instrumento existe
-      const soundUri = audioAssets[instrument];
+      const soundUri = instrumentAssets[instrument][note];
       if (!soundUri) {
-        addLog(`Instrumento ${instrument} não encontrado`);
+        addLog('Nota ' + note + ' nao encontrada para instrumento ' + instrument);
         return;
       }
 
-      // Criar chave única para o som baseada em timestamp para permitir múltiplos sons da mesma nota
       const timestamp = Date.now();
-      const soundKey = `${instrument}_${note}_${timestamp}`;
+      const soundKey = instrument + '_' + note + '_' + timestamp;
       
-      // LIMITAÇÃO: expo-av não suporta time-stretching independente
-      // Aumentar o 'rate' acelera o áudio, reduzindo sua duração
-      // Soluções possíveis:
-      // 1. Aceitar o encurtamento (atual)
-      // 2. Usar múltiplos arquivos pré-processados
-      // 3. Implementar FFmpeg nativo (complexo)
-      
-      // Para minimizar o problema, usamos pitch mais conservador e ajustamos volume
-      const adjustedPitch = Math.min(pitch, 2.0); // Limitar pitch máximo
-      const volumeCompensation = Math.max(0.4, 1.0 - (adjustedPitch - 1.0) * 0.4);
-      
-      // Carregar novo som usando mapeamento estático
-      // NOTA: No expo-av, aumentar o 'rate' também acelera a velocidade, encurtando a duração
-      // Isso é uma limitação da biblioteca - não suporta time-stretching independente
       const { sound } = await Audio.Sound.createAsync(soundUri, {
-        shouldPlay: true, // Tocar imediatamente para evitar som duplo
-        isLooping: false, // Remover loop - deixar som natural
-        rate: adjustedPitch, // Aplicar pitch shift limitado
-        volume: volumeCompensation, // Ajustar volume para compensar
+        shouldPlay: true,
+        isLooping: false,
+        rate: 1.0,
+        volume: 0.8,
         progressUpdateIntervalMillis: 100,
       });
 
       soundObjectsRef.current[soundKey] = sound;
 
-      // Som já está tocando devido a shouldPlay: true
-      addLog(`Tocando ${note} com pitch ${adjustedPitch.toFixed(3)} (${instrument}) - Som natural`);
+      addLog('Tocando ' + note + ' com ' + instrument + ' (arquivo especifico - qualidade perfeita)');
 
-      // Limpar após terminar naturalmente
       sound.setOnPlaybackStatusUpdate((status) => {
         if (status.didJustFinish) {
           sound.unloadAsync();
           delete soundObjectsRef.current[soundKey];
-          addLog(`Som ${note} finalizou naturalmente`);
+          addLog('Som ' + note + ' (' + instrument + ') finalizou naturalmente');
         }
       });
 
     } catch (error) {
-      addLog(`Erro ao tocar nota ${note}: ${error.message}`);
+      addLog('Erro ao tocar nota ' + note + ' com ' + instrument + ': ' + error.message);
     }
   };
 
-  // Função para parar uma nota específica - MODIFICADA: não para mais os sons
   const stopNote = async (note, instrument = 'Piano1') => {
-    // Som continuará tocando até o final naturalmente
-    addLog(`StopNote chamado para ${note}, mas som continuará tocando até o final`);
+    addLog('StopNote chamado para ' + note + ' (' + instrument + '), mas som continuara tocando ate o final');
   };
 
-  // Função para parar todos os sons
   const stopAllSounds = async () => {
     const soundKeys = Object.keys(soundObjectsRef.current);
     
@@ -180,14 +282,13 @@ const useAudioEngine = () => {
         await soundObjectsRef.current[soundKey].unloadAsync();
         delete soundObjectsRef.current[soundKey];
       } catch (error) {
-        addLog(`Erro ao parar som ${soundKey}: ${error.message}`);
+        addLog('Erro ao parar som ' + soundKey + ': ' + error.message);
       }
     }
     
     addLog('Todos os sons foram parados');
   };
 
-  // Limpar sons ao desmontar
   useEffect(() => {
     return () => {
       stopAllSounds();
@@ -199,7 +300,8 @@ const useAudioEngine = () => {
     playNote,
     stopNote,
     stopAllSounds,
-    pitchTable
+    instrumentAssets,
+    noteNumberMapping,
   };
 };
 
