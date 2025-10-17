@@ -2,7 +2,9 @@ import React, { useContext, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import { ScaleContext } from '../context/ScaleContext';
 
-const { width: screenWidth } = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+// Em landscape, a largura real é a altura da tela em portrait
+const landscapeWidth = screenHeight; // ESTA é a largura real em landscape!
 
 // Função para converter notas inglesas para português
 const convertNoteToPortuguese = (note) => {
@@ -168,20 +170,21 @@ const VirtualKeyboard = ({
     return allPianoKeys;
   }, []); // Sem dependências - sempre o mesmo resultado
 
-  // Calcular tamanho das teclas baseado no tamanho da tela
-  // Piano completo C5-B6: 14 teclas brancas (7 por oitava x 2 oitavas)
+  // Calcular tamanho das teclas para ocupar TODA a largura da tela em LANDSCAPE
+  // Piano C5-B6: 14 teclas brancas distribuídas horizontalmente
   const whiteKeysCount = keyboardKeys.filter(k => k.type === 'white').length; // 14 teclas
-  const leftMargin = fullWidth ? 0 : 20; // Sem margem no modo fullWidth
-  const rightMargin = fullWidth ? 0 : 20; // Sem margem no modo fullWidth
-  const availableWidth = screenWidth - (leftMargin + rightMargin); // Descontar margens laterais
   
-  // Calcular largura das teclas brancas para ocupar toda a largura disponível
-  const keyWidth = whiteKeysCount > 0 ? availableWidth / whiteKeysCount : 0;
+  // Compensar a barra de funções do Android com margem
+  const androidNavBarCompensation = 60; // Margem para evitar barra de funções
+  const totalWidth = fullWidth ? landscapeWidth - androidNavBarCompensation : landscapeWidth - 40;
   
-  // Altura das teclas otimizada para piano completo
-  const whiteKeyHeight = compact ? 80 : 150; // Ajustado para 14 teclas
-  const blackKeyHeight = compact ? 50 : 100;  // Ajustado para 14 teclas
-  const pianoWidth = whiteKeysCount * keyWidth;
+  // Largura de cada tecla branca ocupando a largura disponível
+  const whiteKeyWidth = totalWidth / whiteKeysCount;
+  
+  // Altura das teclas menor para ficar mais horizontal
+  const whiteKeyHeight = fullWidth ? 150 : (compact ? 80 : 150);
+  const blackKeyHeight = fullWidth ? 100 : (compact ? 50 : 100);  
+  const blackKeyWidth = whiteKeyWidth * 0.75; // Teclas pretas 75% das brancas
 
   const handleKeyPress = (keyData) => {
     if (keyData.note) {
@@ -228,7 +231,7 @@ const VirtualKeyboard = ({
               styles.whiteKey,
               isPlaying && styles.whiteKeyPressed, // Adicionar estilo quando pressionada
               {
-                width: keyWidth,
+                width: whiteKeyWidth,
                 height: whiteKeyHeight,
               }
             ]}
@@ -239,7 +242,7 @@ const VirtualKeyboard = ({
               <Text style={[
                 inScale ? styles.noteLabelInScale : styles.noteLabel, 
                 isPlaying && styles.noteLabelPressed, // Adicionar estilo do texto quando pressionada
-                { fontSize: compact ? 12 : 18, fontWeight: 'bold' } // Fonte maior para teclas maiores
+                { fontSize: fullWidth ? 18 : (compact ? 12 : 14), fontWeight: 'bold' } // Fonte maior para teclas mais grossas
               ]}>
                 {convertNoteToPortuguese(displayNote)}
               </Text>
@@ -250,21 +253,21 @@ const VirtualKeyboard = ({
   };
 
   const renderBlackKeys = () => {
-    // Posicionamento fixo das teclas pretas no piano completo C5-B6
+    // Posicionamento das teclas pretas baseado na nova largura das teclas brancas (mais grossas)
     const blackKeyPositions = [
       // Oitava 5: C#5, D#5, F#5, G#5, A#5
-      { key: 'W', left: keyWidth * 0.7 },   // C#5 - entre C5(Q) e D5(E)
-      { key: 'R', left: keyWidth * 1.7 },   // D#5 - entre D5(E) e E5(T)
-      { key: 'U', left: keyWidth * 3.7 },   // F#5 - entre F5(Y) e G5(I)
-      { key: 'O', left: keyWidth * 4.7 },   // G#5 - entre G5(I) e A5(P)
-      { key: 'A', left: keyWidth * 5.7 },   // A#5 - entre A5(P) e B5(S)
+      { key: 'W', left: whiteKeyWidth * 0.65 },   // C#5 - entre C5(Q) e D5(E)
+      { key: 'R', left: whiteKeyWidth * 1.65 },   // D#5 - entre D5(E) e E5(T)
+      { key: 'U', left: whiteKeyWidth * 3.65 },   // F#5 - entre F5(Y) e G5(I)
+      { key: 'O', left: whiteKeyWidth * 4.65 },   // G#5 - entre G5(I) e A5(P)
+      { key: 'A', left: whiteKeyWidth * 5.65 },   // A#5 - entre A5(P) e B5(S)
       
       // Oitava 6: C#6, D#6, F#6, G#6, A#6
-      { key: 'F', left: keyWidth * 7.7 },   // C#6 - entre C6(D) e D6(G)
-      { key: 'H', left: keyWidth * 8.7 },   // D#6 - entre D6(G) e E6(J)
-      { key: 'L', left: keyWidth * 10.7 },  // F#6 - entre F6(K) e G6(Z)
-      { key: 'X', left: keyWidth * 11.7 },  // G#6 - entre G6(Z) e A6(C)
-      { key: 'V', left: keyWidth * 12.7 },  // A#6 - entre A6(C) e B6(B)
+      { key: 'F', left: whiteKeyWidth * 7.65 },   // C#6 - entre C6(D) e D6(G)
+      { key: 'H', left: whiteKeyWidth * 8.65 },   // D#6 - entre D6(G) e E6(J)
+      { key: 'L', left: whiteKeyWidth * 10.65 },  // F#6 - entre F6(K) e G6(Z)
+      { key: 'X', left: whiteKeyWidth * 11.65 },  // G#6 - entre G6(Z) e A6(C)
+      { key: 'V', left: whiteKeyWidth * 12.65 },  // A#6 - entre A6(C) e B6(B)
     ];
 
     return blackKeyPositions.map((pos) => {
@@ -282,7 +285,7 @@ const VirtualKeyboard = ({
             styles.blackKey,
             isPlaying && styles.blackKeyPressed, // Adicionar estilo quando pressionada
             {
-              width: keyWidth * 0.6, // Tecla preta um pouco mais estreita
+              width: blackKeyWidth, // Usar largura calculada das teclas pretas
               height: blackKeyHeight,
               left: pos.left,
             }
@@ -294,7 +297,7 @@ const VirtualKeyboard = ({
             <Text style={[
               inScale ? styles.blackNoteLabelInScale : styles.blackNoteLabel, 
               isPlaying && styles.blackNoteLabelPressed, // Adicionar estilo do texto quando pressionada
-              { fontSize: compact ? 10 : 14, fontWeight: 'bold' } // Fonte maior para teclas maiores
+              { fontSize: fullWidth ? 14 : (compact ? 10 : 12), fontWeight: 'bold' } // Fonte maior para teclas pretas mais grossas
             ]}>
               {convertNoteToPortuguese(displayNote)}
             </Text>
@@ -312,26 +315,48 @@ const VirtualKeyboard = ({
       styles.keyboardContainer, 
       compact && { padding: 8, margin: 5 },
       fullWidth && { 
-        marginLeft: leftMargin, 
-        marginRight: rightMargin,
-        paddingHorizontal: 0 
+        marginLeft: androidNavBarCompensation, // Margem maior para mover mais para direita
+        marginRight: 0,
+        paddingHorizontal: 0,
+        paddingLeft: 0,
+        paddingRight: 0,
+        width: totalWidth, // Usar totalWidth calculado
+        maxWidth: totalWidth,
+        minWidth: totalWidth,
+        alignSelf: 'flex-start' // Alinhar no início com margem
       }
     ]}>
       
       <View style={[styles.pianoContainer, { 
-        height: whiteKeyHeight + (compact ? 15 : 30),
-        width: availableWidth,
-        alignSelf: 'flex-start',
+        height: whiteKeyHeight + 30,
+        width: totalWidth, // Usar totalWidth calculado
+        maxWidth: totalWidth,
+        minWidth: totalWidth,
+        alignSelf: 'center', // Centralizar o piano no container
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
+        marginLeft: 0,
+        marginRight: 0,
+        paddingLeft: 0,
+        paddingRight: 0
       }]}>
         {/* Teclas brancas */}
-        <View style={styles.whiteKeysRow}>
+        <View style={[styles.whiteKeysRow, { 
+          width: totalWidth, // Usar totalWidth calculado
+          maxWidth: totalWidth,
+          minWidth: totalWidth,
+          alignSelf: 'center' // Centralizar as teclas
+        }]}>
           {renderWhiteKeys()}
         </View>
         
         {/* Teclas pretas */}
-        <View style={styles.blackKeysRow}>
+        <View style={[styles.blackKeysRow, { 
+          width: totalWidth, // Usar totalWidth calculado
+          maxWidth: totalWidth,
+          minWidth: totalWidth,
+          alignSelf: 'center' // Centralizar as teclas pretas
+        }]}>
           {renderBlackKeys()}
         </View>
       </View>
@@ -342,7 +367,7 @@ const VirtualKeyboard = ({
 const styles = StyleSheet.create({
   keyboardContainer: {
     backgroundColor: '#f5f5f5',
-    padding: 15,
+    padding: 0, // SEM padding para maximizar largura
     borderRadius: 12,
     margin: 0,
     shadowColor: '#000',
@@ -381,12 +406,15 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     justifyContent: 'flex-start',
+    width: '100%', // Garantir largura total
   },
   
   blackKeysRow: {
     position: 'absolute',
     top: 0,
     width: '100%',
+    left: 0,
+    right: 0,
   },
   
   whiteKey: {

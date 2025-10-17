@@ -80,38 +80,47 @@ const TecladoPage = () => {
   }, []); // Array vazio - nunca re-executa
 
   return (
-    <View style={[styles.pageContainer, { flex: 1, padding: 0 }]}>
+    <View style={[{ flex: 1, padding: 0, margin: 0, backgroundColor: '#fff' }]}>
       <HeaderMinimal title="Teclado" iconType="teclado" onBack={() => navigation.goBack()} inverted={true} />
       
-      {/* Legenda alinhada à esquerda, sem caixa */}
+      {/* Legenda sem padding para não limitar o layout */}
       <View style={{
-        paddingHorizontal: 20, // Mesmo padding lateral do app
-        marginTop: 5, // Pequena margem para conectar com header
-        marginBottom: 10 // Espaço para o teclado
+        paddingHorizontal: 20, // Manter padding só na legenda
+        marginTop: 5,
+        marginBottom: 10
       }}>
         <Text style={{
           fontSize: 14,
           fontWeight: 'bold',
           color: '#333',
           marginBottom: 4,
-          textAlign: 'left' // Alinhado à esquerda
+          textAlign: 'left'
         }}>
           Escala: {String(selectedScale || 'Nenhuma')}
         </Text>
         <Text style={{
           fontSize: 12,
           color: '#666',
-          textAlign: 'left' // Alinhado à esquerda
+          textAlign: 'left'
         }}>
           {scaleNotes && scaleNotes.length > 0 ? String(scaleNotes.join(' - ')) : 'Nenhuma escala selecionada'}
         </Text>
       </View>
 
-      {/* Container do teclado virtual com largura total */}
+      {/* Container do teclado ABSOLUTO - ignora QUALQUER limitação de layout */}
       <View style={{
-        flex: 1,
-        paddingHorizontal: 0, // Remover padding para largura total
-        justifyContent: 'center'
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        width: '100%',
+        height: 200,
+        paddingHorizontal: 0,
+        paddingVertical: 0,
+        margin: 0,
+        justifyContent: 'center',
+        backgroundColor: 'transparent',
+        zIndex: 1000 // Z-index alto para ficar sobre tudo
       }}>
         <VirtualKeyboard
           showLabels={true}
