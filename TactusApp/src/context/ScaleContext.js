@@ -68,7 +68,7 @@ const transposeOctaveUp = (note) => {
 // Função para gerar escala maior
 const generateMajorScale = (tonic) => {
   // Fórmula: Tom-Tom-semitom-Tom-Tom-Tom-semitom
-  const intervals = [2, 2, 1, 2, 2, 2, 1]; // em semitons
+  const intervals = [2, 2, 1, 2, 2, 2, 1, 2, 2]; // em semitons
   const normalizedTonic = normalizeNote(tonic);
   const startIndex = getNoteIndex(normalizedTonic);
   
@@ -77,7 +77,7 @@ const generateMajorScale = (tonic) => {
   const scale = [normalizedTonic];
   let currentIndex = startIndex;
   
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < 9; i++) {
     currentIndex += intervals[i];
     const note = getNoteByIndex(currentIndex);
     if (note) {
@@ -91,7 +91,7 @@ const generateMajorScale = (tonic) => {
 // Função para gerar escala menor natural
 const generateMinorScale = (tonic) => {
   // Fórmula: Tom-semitom-Tom-Tom-semitom-Tom-Tom
-  const intervals = [2, 1, 2, 2, 1, 2, 2]; // em semitons
+  const intervals = [2, 1, 2, 2, 1, 2, 2, 2, 1]; // em semitons
   const normalizedTonic = normalizeNote(tonic);
   const startIndex = getNoteIndex(normalizedTonic);
   
@@ -100,7 +100,7 @@ const generateMinorScale = (tonic) => {
   const scale = [normalizedTonic];
   let currentIndex = startIndex;
   
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < 9; i++) {
     currentIndex += intervals[i];
     const note = getNoteByIndex(currentIndex);
     if (note) {
@@ -113,33 +113,33 @@ const generateMinorScale = (tonic) => {
 
 // Lista ordenada das escalas (na ordem especificada)
 export const orderedScales = [
-  // Escalas Maiores
+  // Escalas Maiores (ordem cromática)
   'Dó Maior',
-  'Sol Maior', 
+  'Dó# Maior',
   'Ré Maior',
-  'Lá Maior',
+  'Ré# Maior',
   'Mi Maior',
-  'Si / Dób Maior',
-  'Solb / Fá# Maior',
-  'Réb / Dó# Maior',
-  'Láb Maior',
-  'Mib Maior',
-  'Sib Maior',
   'Fá Maior',
-  
-  // Escalas Menores
-  'Lá Menor',
-  'Mi Menor',
-  'Si Menor',
-  'Fá# Menor',
-  'Dó# Menor',
-  'Láb / Sol# Menor',
-  'Mib / Ré# Menor',
-  'Sib / Lá# Menor',
-  'Fá Menor',
+  'Fá# Maior',
+  'Sol Maior',
+  'Sol# Maior',
+  'Lá Maior',
+  'Lá# Maior',
+  'Si Maior',
+
+  // Escalas Menores (ordem cromática)
   'Dó Menor',
+  'Dó# Menor',
+  'Ré Menor',
+  'Ré# Menor',
+  'Mi Menor',
+  'Fá Menor',
+  'Fá# Menor',
   'Sol Menor',
-  'Ré Menor'
+  'Sol# Menor',
+  'Lá Menor',
+  'Lá# Menor',
+  'Si Menor',
 ];
 
 // Definição completa das escalas na ordem especificada

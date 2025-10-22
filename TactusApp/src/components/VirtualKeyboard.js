@@ -6,6 +6,18 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 // Em landscape, a largura real é a altura da tela em portrait
 const landscapeWidth = screenHeight; // ESTA é a largura real em landscape!
 
+// Função utilitária para obter largura total do teclado conforme orientação/página
+function getKeyboardTotalWidth({ fullWidth }) {
+  // Se for fullWidth (TecladoPage, horizontal), usar landscapeWidth
+  // Senão, usar screenWidth (vertical, exercícios)
+  const androidNavBarCompensation = 60;
+  if (fullWidth) {
+    return landscapeWidth - androidNavBarCompensation;
+  } else {
+    return screenWidth - 24; // margem pequena para não colar na borda
+  }
+}
+
 // Função para converter notas inglesas para português
 const convertNoteToPortuguese = (note) => {
   if (!note || typeof note !== 'string') {
@@ -174,16 +186,15 @@ const VirtualKeyboard = ({
   // Piano C5-B6: 14 teclas brancas distribuídas horizontalmente
   const whiteKeysCount = keyboardKeys.filter(k => k.type === 'white').length; // 14 teclas
   
-  // Compensar a barra de funções do Android com margem
-  const androidNavBarCompensation = 60; // Margem para evitar barra de funções
-  const totalWidth = fullWidth ? landscapeWidth - androidNavBarCompensation : landscapeWidth - 40;
-  
+  // Calcular largura total do teclado conforme orientação/página
+  const totalWidth = getKeyboardTotalWidth({ fullWidth });
+
   // Largura de cada tecla branca ocupando a largura disponível
   const whiteKeyWidth = totalWidth / whiteKeysCount;
-  
+
   // Altura das teclas menor para ficar mais horizontal
   const whiteKeyHeight = fullWidth ? 150 : (compact ? 80 : 150);
-  const blackKeyHeight = fullWidth ? 100 : (compact ? 50 : 100);  
+  const blackKeyHeight = fullWidth ? 100 : (compact ? 50 : 100);
   const blackKeyWidth = whiteKeyWidth * 0.75; // Teclas pretas 75% das brancas
 
   const handleKeyPress = (keyData) => {
@@ -314,48 +325,48 @@ const VirtualKeyboard = ({
     <View style={[
       styles.keyboardContainer, 
       compact && { padding: 8, margin: 5 },
-      fullWidth && { 
-        marginLeft: androidNavBarCompensation, // Margem maior para mover mais para direita
+      fullWidth && {
+        marginLeft: 60, // manter margem para barra android
         marginRight: 0,
         paddingHorizontal: 0,
         paddingLeft: 0,
         paddingRight: 0,
-        width: totalWidth, // Usar totalWidth calculado
+        width: totalWidth,
         maxWidth: totalWidth,
         minWidth: totalWidth,
-        alignSelf: 'flex-start' // Alinhar no início com margem
+        alignSelf: 'flex-start'
       }
     ]}>
       
-      <View style={[styles.pianoContainer, { 
+      <View style={[styles.pianoContainer, {
         height: whiteKeyHeight + 30,
-        width: totalWidth, // Usar totalWidth calculado
+        width: totalWidth,
         maxWidth: totalWidth,
         minWidth: totalWidth,
-        alignSelf: 'center', // Centralizar o piano no container
+        alignSelf: 'center',
         justifyContent: 'center',
         alignItems: 'center',
         marginLeft: 0,
         marginRight: 0,
         paddingLeft: 0,
         paddingRight: 0
-      }]}>
+      }]}> 
         {/* Teclas brancas */}
-        <View style={[styles.whiteKeysRow, { 
-          width: totalWidth, // Usar totalWidth calculado
+        <View style={[styles.whiteKeysRow, {
+          width: totalWidth,
           maxWidth: totalWidth,
           minWidth: totalWidth,
-          alignSelf: 'center' // Centralizar as teclas
-        }]}>
+          alignSelf: 'center'
+        }]}> 
           {renderWhiteKeys()}
         </View>
         
         {/* Teclas pretas */}
-        <View style={[styles.blackKeysRow, { 
-          width: totalWidth, // Usar totalWidth calculado
+        <View style={[styles.blackKeysRow, {
+          width: totalWidth,
           maxWidth: totalWidth,
           minWidth: totalWidth,
-          alignSelf: 'center' // Centralizar as teclas pretas
+          alignSelf: 'center'
         }]}>
           {renderBlackKeys()}
         </View>

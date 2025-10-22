@@ -80,7 +80,7 @@ const TecladoPage = () => {
   }, []); // Array vazio - nunca re-executa
 
   return (
-    <View style={[{ flex: 1, padding: 0, margin: 0, backgroundColor: '#fff' }]}>
+    <View style={{ flex: 1, backgroundColor: '#fff' }}>
       <HeaderMinimal title="Teclado" iconType="teclado" onBack={() => navigation.goBack()} inverted={true} />
       
       {/* Legenda sem padding para não limitar o layout */}
@@ -114,7 +114,7 @@ const TecladoPage = () => {
         left: 0,
         right: 0,
         width: '100%',
-        height: 200,
+        height: 200, // Aumenta altura do teclado
         paddingHorizontal: 0,
         paddingVertical: 0,
         margin: 0,
