@@ -7,6 +7,7 @@ import HeaderMinimal from '../HeaderMinimal';
 import ButtonPage from '../ButtonPage';
 import VirtualKeyboard from '../VirtualKeyboard';
 import ESP32Invisible from '../ESP32Invisible';
+import FingerMappingMessage from '../FingerMappingMessage';
 import styles from '../styles';
 import { useNavigation } from '@react-navigation/native';
 import { ScaleContext } from '../../context/ScaleContext';
@@ -23,6 +24,10 @@ const Exercicio4 = () => {
     sustainedNotes
   } = useContext(ScaleContext);
 
+  const { 
+    playNote,
+    selectedInstrument
+  } = useContext(ScaleContext);
   // Estados do exercício - DIRETO E SIMPLES
   const [currentRound, setCurrentRound] = useState(1);
   const [targetNote, setTargetNote] = useState(null);
@@ -35,6 +40,7 @@ const Exercicio4 = () => {
   
   // CONTADORES SIMPLES QUE VÃO FUNCIONAR
   const [pontuacao, setPontuacao] = useState(0);
+
   const [sequenciaAcertos, setSequenciaAcertos] = useState(0);
   const [acertos, setAcertos] = useState(0);
   const [erros, setErros] = useState(0);
@@ -99,7 +105,9 @@ const Exercicio4 = () => {
     };
     
     if (!note) return '';
-    const [noteName, octave] = [note.slice(0, -1), note.slice(-1)];
+    
+    const noteName = note.charAt(0);
+    const octave = note.slice(1);
     const portugueseName = noteMap[noteName] || noteName;
     
     return `${portugueseName} ${octave}`;
@@ -144,15 +152,13 @@ const Exercicio4 = () => {
 
   // Gerar nota aleatória disponível
   const getRandomNote = () => {
-    if (scaleNotes && scaleNotes.length > 0) {
-      const availableNotes = scaleNotes.filter(note => 
-        availableKeys.some(key => keyMapping[key] === note)
-      );
-      
-      if (availableNotes.length > 0) {
-        const randomIndex = Math.floor(Math.random() * availableNotes.length);
-        return availableNotes[randomIndex];
-      }
+    if (!scaleNotes || scaleNotes.length === 0) {
+      return 'C5'; // Fallback;
+    }
+    const notesToChoose = scaleNotes.slice(0, 10);
+    if (notesToChoose.length > 0) {
+      const randomIndex = Math.floor(Math.random() * notesToChoose.length);
+      return notesToChoose[randomIndex];
     }
     return 'C5'; // Fallback
   };
@@ -169,6 +175,11 @@ const Exercicio4 = () => {
     setShowingNote(true);
     setWaitingForInput(false);
     setFeedback(`Rodada ${String(currentRound || 0)}/${String(totalRounds || 0)} - Memorize a partitura!`);
+
+    // Toca o som da nota sorteada
+    if (playNote && typeof playNote === 'function') {
+      playNote(newNote, selectedInstrument || 'Piano1');
+    }
 
     // Mostrar nota por 1 segundo
     setTimeout(() => {
@@ -470,17 +481,26 @@ const Exercicio4 = () => {
           )}
         </View>
 
-        {/* Teclado virtual */}
         <View style={{ 
           alignItems: 'center',
           justifyContent: 'center',
-          marginTop: 100
+          marginTop: 50,
+          marginBottom: 60,
         }}>
           <VirtualKeyboard
             showLabels={true}
             compact={true}
             onKeyPress={handleKeyPress}
           />
+          
+        </View>
+
+        <View style={{ 
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginTop: 50,
+        }}>
+          <FingerMappingMessage keyMapping={keyMapping} />
         </View>
 
         {/* Completion Modal */}

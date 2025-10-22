@@ -6,6 +6,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import HeaderMinimal from '../HeaderMinimal';
 import ButtonPage from '../ButtonPage';
 import VirtualKeyboard from '../VirtualKeyboard';
+import FingerMappingMessage from '../FingerMappingMessage';
 import ESP32Invisible from '../ESP32Invisible';
 import styles from '../styles';
 import { useNavigation } from '@react-navigation/native';
@@ -20,7 +21,9 @@ const Exercicio2 = () => {
     keyMapping, 
     startSustainedNote, 
     stopSustainedNote,
-    sustainedNotes
+    sustainedNotes,
+    playNote,
+    selectedInstrument
   } = useContext(ScaleContext);
 
   // Estados do exercício - DIRETO E SIMPLES
@@ -118,7 +121,9 @@ const Exercicio2 = () => {
     };
     
     if (!note) return '';
-    const [noteName, octave] = [note.slice(0, -1), note.slice(-1)];
+    
+    const noteName = note.charAt(0);
+    const octave = note.slice(1);
     const portugueseName = noteMap[noteName] || noteName;
     
     return `${portugueseName} ${octave}`;
@@ -126,15 +131,13 @@ const Exercicio2 = () => {
 
   // Gerar nota aleatória disponível
   const getRandomNote = () => {
-    if (scaleNotes && scaleNotes.length > 0) {
-      const availableNotes = scaleNotes.filter(note => 
-        availableKeys.some(key => keyMapping[key] === note)
-      );
-      
-      if (availableNotes.length > 0) {
-        const randomIndex = Math.floor(Math.random() * availableNotes.length);
-        return availableNotes[randomIndex];
-      }
+    if (!scaleNotes || scaleNotes.length === 0) {
+      return 'C5'; // Fallback
+    }
+    const notesToChoose = scaleNotes.slice(0, 10);
+    if (notesToChoose.length > 0) {
+      const randomIndex = Math.floor(Math.random() * notesToChoose.length);
+      return notesToChoose[randomIndex];
     }
     return 'C5'; // Fallback
   };
@@ -151,6 +154,11 @@ const Exercicio2 = () => {
     setShowingNote(true);
     setWaitingForInput(false);
     setFeedback(`Rodada ${String(currentRound || 0)}/${String(totalRounds || 0)} - Memorize a nota!`);
+
+    // Toca o som da nota sorteada
+    if (playNote && typeof playNote === 'function') {
+      playNote(newNote, selectedInstrument || 'Piano1');
+    }
 
     // Mostrar nota por 1 segundo
     setTimeout(() => {
@@ -452,18 +460,31 @@ const Exercicio2 = () => {
           )}
         </View>
 
-        {/* Teclado virtual */}
         <View style={{ 
           alignItems: 'center',
           justifyContent: 'center',
-          marginTop: 100
+          marginTop: 50,
+          marginBottom: 60,
         }}>
           <VirtualKeyboard
             showLabels={true}
             compact={true}
             onKeyPress={handleKeyPress}
           />
+          
         </View>
+
+        <View style={{ 
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginTop: 50,
+        }}>
+          <FingerMappingMessage keyMapping={keyMapping} />
+        </View>
+        
+          
+          
+        
 
         {/* Completion Modal */}
         <Modal

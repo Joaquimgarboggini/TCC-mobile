@@ -7,6 +7,7 @@ import HeaderMinimal from '../HeaderMinimal';
 import ButtonPage from '../ButtonPage';
 import VirtualKeyboard from '../VirtualKeyboard';
 import ESP32Invisible from '../ESP32Invisible';
+import FingerMappingMessage from '../FingerMappingMessage';
 import styles from '../styles';
 import { useNavigation } from '@react-navigation/native';
 import { ScaleContext } from '../../context/ScaleContext';
@@ -20,7 +21,9 @@ const Exercicio1 = () => {
     keyMapping, 
     startSustainedNote, 
     stopSustainedNote,
-    sustainedNotes
+    sustainedNotes,
+    playNote,
+    selectedInstrument
   } = useContext(ScaleContext);
 
   // Estados do exercício - DIRETO E SIMPLES
@@ -137,41 +140,15 @@ const Exercicio1 = () => {
 
   // Função para obter nota aleatória da escala correspondente às teclas disponíveis
   const getRandomNote = () => {
-    if (!scaleNotes || !keyMapping) {
+    if (!scaleNotes || scaleNotes.length === 0) {
       return 'C5'; // Fallback
     }
-
-    // Filtrar apenas as notas que correspondem às teclas QWER YUIO
-    const availableNotes = [];
-    
-    availableKeys.forEach(key => {
-      const note = keyMapping[key];
-      if (note && scaleNotes.includes(note)) {
-        // Garantir que a nota esteja nas oitavas 5 ou 6
-        const noteName = note.charAt(0);
-        const octave = parseInt(note.slice(1));
-        
-        if (octave === 5 || octave === 6) {
-          availableNotes.push(note);
-        } else {
-          // Ajustar para oitava 5 ou 6
-          const adjustedNote5 = `${noteName}5`;
-          const adjustedNote6 = `${noteName}6`;
-          
-          if (scaleNotes.includes(adjustedNote5)) {
-            availableNotes.push(adjustedNote5);
-          } else if (scaleNotes.includes(adjustedNote6)) {
-            availableNotes.push(adjustedNote6);
-          }
-        }
-      }
-    });
-
-    if (availableNotes.length > 0) {
-      const randomIndex = Math.floor(Math.random() * availableNotes.length);
-      return availableNotes[randomIndex];
+    // Sorteia entre as 10 primeiras notas da escala (incluindo sustenidas)
+    const notesToChoose = scaleNotes.slice(0, 10);
+    if (notesToChoose.length > 0) {
+      const randomIndex = Math.floor(Math.random() * notesToChoose.length);
+      return notesToChoose[randomIndex];
     }
-    
     return 'C5'; // Fallback
   };
 
@@ -187,6 +164,11 @@ const Exercicio1 = () => {
     setShowingNote(true);
     setWaitingForInput(false);
     setFeedback(`Rodada ${String(currentRound || 0)}/${String(totalRounds || 0)} - Memorize a nota:`);
+
+    // Toca o som da nota sorteada
+    if (playNote && typeof playNote === 'function') {
+      playNote(note, selectedInstrument || 'Piano1');
+    }
 
     // Esconder a nota após 2 segundos
     setTimeout(() => {
@@ -481,17 +463,26 @@ const Exercicio1 = () => {
           )}
         </View>
 
-        {/* Teclado virtual */}
         <View style={{ 
           alignItems: 'center',
           justifyContent: 'center',
-          marginTop: 100
+          marginTop: 50,
+          marginBottom: 60,
         }}>
           <VirtualKeyboard
             showLabels={true}
             compact={true}
             onKeyPress={handleKeyPress}
           />
+          
+        </View>
+
+        <View style={{ 
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginTop: 50,
+        }}>
+          <FingerMappingMessage keyMapping={keyMapping} />
         </View>
 
         {/* Completion Modal */}

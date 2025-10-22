@@ -6,6 +6,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import HeaderMinimal from '../HeaderMinimal';
 import VirtualKeyboard from '../VirtualKeyboard';
 import ESP32Invisible from '../ESP32Invisible';
+import FingerMappingMessage from '../FingerMappingMessage';
 import styles from '../styles';
 import { useNavigation } from '@react-navigation/native';
 import { ScaleContext } from '../../context/ScaleContext';
@@ -20,9 +21,10 @@ const Exercicio9 = () => {
     keyMapping, 
     startSustainedNote, 
     stopSustainedNote,
-    sustainedNotes
+    sustainedNotes,
+    playNote,
+    selectedInstrument
   } = useContext(ScaleContext);
-
   // Estados do exercício
   const [currentRound, setCurrentRound] = useState(1);
   const [targetNote, setTargetNote] = useState(null);
@@ -167,7 +169,12 @@ const Exercicio9 = () => {
     setShowingNote(true);
     setWaitingForInput(true);
     setFeedback(getNoteInPortuguese(newNote));
-    
+
+    // Tocar a nota assim que ela aparece
+    if (playNote && typeof playNote === 'function') {
+      playNote(newNote, selectedInstrument || 'Piano1');
+    }
+
     console.log(`Rodada ${currentRound}: Nota alvo = ${newNote}`);
   };
 
@@ -440,12 +447,29 @@ const Exercicio9 = () => {
           )}
         </View>
 
-        {/* Teclado virtual */}
-        <VirtualKeyboard
-          showLabels={true}
-          compact={true}
-          onKeyPress={handleKeyPress}
-        />
+        
+
+          <View style={{ 
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginTop: 50,
+          marginBottom: 60,
+        }}>
+          <VirtualKeyboard
+            showLabels={true}
+            compact={true}
+            onKeyPress={handleKeyPress}
+          />
+          
+        </View>
+
+        <View style={{ 
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginTop: 50,
+        }}>
+          <FingerMappingMessage keyMapping={keyMapping} />
+        </View>
 
         {/* Completion Modal */}
         <Modal

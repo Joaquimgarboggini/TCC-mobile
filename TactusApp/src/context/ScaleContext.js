@@ -151,11 +151,17 @@ export const scales = {
   'Lá Maior': generateMajorScale('A5'),
   'Mi Maior': generateMajorScale('E5'),
   'Si / Dób Maior': generateMajorScale('B5'),
+  'Si Maior': generateMajorScale('B5'),
   'Solb / Fá# Maior': generateMajorScale('F#5'),
+  'Fá# Maior': generateMajorScale('F#5'),
   'Réb / Dó# Maior': generateMajorScale('C#5'),
+  'Dó# Maior': generateMajorScale('C#5'),
   'Láb Maior': generateMajorScale('G#5'),
+  'Sol# Maior': generateMajorScale('G#5'),
   'Mib Maior': generateMajorScale('D#5'),
+  'Ré# Maior': generateMajorScale('D#5'),
   'Sib Maior': generateMajorScale('A#5'),
+  'Lá# Maior': generateMajorScale('A#5'),
   'Fá Maior': generateMajorScale('F5'),
   
   // Escalas Menores
@@ -164,9 +170,9 @@ export const scales = {
   'Si Menor': generateMinorScale('B5'),
   'Fá# Menor': generateMinorScale('F#5'),
   'Dó# Menor': generateMinorScale('C#5'),
-  'Láb / Sol# Menor': generateMinorScale('G#5'),
-  'Mib / Ré# Menor': generateMinorScale('D#5'),
-  'Sib / Lá# Menor': generateMinorScale('A#5'),
+  'Sol# Menor': generateMinorScale('G#5'),
+  'Ré# Menor': generateMinorScale('D#5'),
+  'Lá# Menor': generateMinorScale('A#5'),
   'Fá Menor': generateMinorScale('F5'),
   'Dó Menor': generateMinorScale('C5'),
   'Sol Menor': generateMinorScale('G5'),
@@ -289,24 +295,12 @@ export const ScaleProvider = ({ children }) => {
     if (currentScale && scales[currentScale]) {
       const notes = scales[currentScale];
       const mapping = {};
-      
-      // Mapear QWERTYUI para as 8 primeiras notas da escala selecionada
-      qwertyKeys.slice(0, 8).forEach((key, idx) => {
+      // Mapear QWERTYUIOP para as 10 primeiras notas da escala selecionada (incluindo sustenidas)
+      qwertyKeys.forEach((key, idx) => {
         if (idx < notes.length) {
           mapping[key] = notes[idx];
         }
       });
-      
-      // Mapear O e P para 2º e 3º graus uma oitava acima
-      if (notes.length >= 2) {
-        const secondDegreeUp = transposeOctaveUp(notes[1]); // 2º grau uma oitava acima
-        mapping['O'] = secondDegreeUp;
-      }
-      if (notes.length >= 3) {
-        const thirdDegreeUp = transposeOctaveUp(notes[2]); // 3º grau uma oitava acima
-        mapping['P'] = thirdDegreeUp;
-      }
-      
       // Mapear todas as outras teclas para suas notas fixas do piano
       const allKeyboardKeys = [
         { key: 'Q', note: 'C5' }, { key: 'W', note: 'C#5' }, { key: 'E', note: 'D5' }, 
@@ -318,17 +312,13 @@ export const ScaleProvider = ({ children }) => {
         { key: 'L', note: 'F#6' }, { key: 'Z', note: 'G6' }, { key: 'X', note: 'G#6' }, 
         { key: 'C', note: 'A6' }, { key: 'V', note: 'A#6' }, { key: 'B', note: 'B6' }
       ];
-      
-      // Para as teclas que NÃO são QWERTYUIOP, usar o mapeamento fixo
       allKeyboardKeys.forEach(keyData => {
         if (!qwertyKeys.includes(keyData.key)) {
           mapping[keyData.key] = keyData.note;
         }
       });
-      
       setKeyMapping(mapping);
       setScaleNotes(notes);
-
       // Log the notes and their corresponding keys
       console.log('Current Scale:', currentScale);
       console.log('Scale Notes (first 10):', notes.slice(0, 10));

@@ -5,6 +5,7 @@ import { View, Text, TouchableOpacity, Image, Modal } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import HeaderMinimal from '../HeaderMinimal';
 import VirtualKeyboard from '../VirtualKeyboard';
+import FingerMappingMessage from '../FingerMappingMessage';
 import ESP32Invisible from '../ESP32Invisible';
 import styles from '../styles';
 import { useNavigation } from '@react-navigation/native';
@@ -20,7 +21,9 @@ const Exercicio10 = () => {
     keyMapping, 
     startSustainedNote, 
     stopSustainedNote,
-    sustainedNotes
+    sustainedNotes,
+    playNote,
+    selectedInstrument
   } = useContext(ScaleContext);
 
   // Estados do exercício
@@ -167,6 +170,11 @@ const Exercicio10 = () => {
     setShowingNote(true);
     setWaitingForInput(true);
     setFeedback(getNoteInPortuguese(newNote));
+    
+    // Tocar a nota por 1.5 segundos (sustain e playNote para garantir)
+    if (playNote && typeof playNote === 'function') {
+      playNote(newNote, selectedInstrument || 'Piano1');
+    }
     
     console.log(`Rodada ${currentRound}: Nota alvo = ${newNote}`);
   };
@@ -440,12 +448,30 @@ const Exercicio10 = () => {
           )}
         </View>
 
-        {/* Teclado virtual */}
-        <VirtualKeyboard
-          showLabels={true}
-          compact={true}
-          onKeyPress={handleKeyPress}
-        />
+        
+
+       <View style={{ 
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginTop: 50,
+          marginBottom: 60,
+        }}>
+          <VirtualKeyboard
+            showLabels={true}
+            compact={true}
+            onKeyPress={handleKeyPress}
+          />
+          
+        </View>
+
+        <View style={{ 
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginTop: 50,
+        }}>
+          <FingerMappingMessage keyMapping={keyMapping} />
+        </View>
+        
 
         {/* Completion Modal */}
         <Modal

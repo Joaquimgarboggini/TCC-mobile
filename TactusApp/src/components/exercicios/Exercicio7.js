@@ -6,12 +6,14 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import HeaderMinimal from '../HeaderMinimal';
 import VirtualKeyboard from '../VirtualKeyboard';
 import ESP32Invisible from '../ESP32Invisible';
+import FingerMappingMessage from '../FingerMappingMessage';
 import styles from '../styles';
 import { useNavigation } from '@react-navigation/native';
 import { ScaleContext } from '../../context/ScaleContext';
 import { saveExerciseScore } from '../ExerciciosPage';
 
 const Exercicio7 = () => {
+
   const navigation = useNavigation();
   const { 
     scaleNotes, 
@@ -20,7 +22,9 @@ const Exercicio7 = () => {
     keyMapping, 
     startSustainedNote, 
     stopSustainedNote,
-    sustainedNotes
+    sustainedNotes,
+    playNote,
+    selectedInstrument
   } = useContext(ScaleContext);
 
   // Estados do exercício
@@ -135,15 +139,18 @@ const Exercicio7 = () => {
     setShowingNote(true);
     setWaitingForInput(true);
     setFeedback(getNoteInPortuguese(newNote));
-    
-    // Tocar a nota por 1.5 segundos
+
+    // Tocar a nota por 1.5 segundos (sustain e playNote para garantir)
+    if (playNote && typeof playNote === 'function') {
+      playNote(newNote, selectedInstrument || 'Piano1');
+    }
     startSustainedNote(newNote);
     setTimeout(() => {
       stopSustainedNote();
       setShowingNote(false);
       setFeedback(getNoteInPortuguese(newNote));
     }, 1500);
-    
+
     console.log(`Rodada ${currentRound}: Nota alvo = ${newNote}`);
   };
 
@@ -410,12 +417,27 @@ const Exercicio7 = () => {
           )}
         </View>
 
-        {/* Teclado virtual */}
-        <VirtualKeyboard
-          showLabels={true}
-          compact={true}
-          onKeyPress={handleKeyPress}
-        />
+       <View style={{ 
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginTop: 50,
+          marginBottom: 60,
+        }}>
+          <VirtualKeyboard
+            showLabels={true}
+            compact={true}
+            onKeyPress={handleKeyPress}
+          />
+          
+        </View>
+
+        <View style={{ 
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginTop: 50,
+        }}>
+          <FingerMappingMessage keyMapping={keyMapping} />
+        </View>
 
         {/* Completion Modal */}
         <Modal
